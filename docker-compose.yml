@@ -1,0 +1,21 @@
+version: "3.9"
+services:
+
+  python_test:
+    build: .
+    restart: "no"
+    command: python3 -m unittest
+    depends_on:
+      - "redis_test"
+    environment:
+      - REDIS_HOST=redis_test
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+
+  redis_test:
+    image: redis
+    restart: "no"
+    command: redis-server --loglevel warning
+    environment:
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL,CONFIG
+      - ALLOW_EMPTY_PASSWORD=yes
