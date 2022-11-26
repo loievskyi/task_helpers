@@ -20,9 +20,12 @@ class FullQueueNameMixin:
 
     def _get_ful_queue_name(self, queue_name, sufix=None):
         """Returns full_queue_name (with prefix & sufix, like "pending")"""
+        full_queue_name = queue_name
+        if self.prefix_queue:
+            full_queue_name = f"{self.prefix_queue}:{full_queue_name}"
         if sufix:
-            return f"{self.prefix_queue}:{queue_name}:{sufix}"
-        return f"{self.prefix_queue}:{queue_name}"
+            full_queue_name = f"{full_queue_name}:{sufix}"
+        return full_queue_name
 
 
 class RedisClientTaskHelper(FullQueueNameMixin, BaseClientTaskHelper):
