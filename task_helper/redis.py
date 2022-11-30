@@ -61,7 +61,7 @@ class RedisClientTaskHelper(FullQueueNameMixin, BaseClientTaskHelper):
         utc_start_time = datetime.datetime.utcnow()
         if isinstance(timeout, int) or isinstance(timeout, float):
             timeout = datetime.timedelta(seconds=timeout)
-        name = self._get_queue_name(queue_name, "results:") + str(task_id)
+        name = self._get_ful_queue_name(queue_name, "results:") + str(task_id)
         exists = self.redis_connection.exists(name)
         while not exists:
             time.sleep(self.refresh_timeout)
@@ -89,4 +89,3 @@ class RedisClientTaskHelper(FullQueueNameMixin, BaseClientTaskHelper):
             self._get_ful_queue_name(queue_name=queue_name, sufix="pending"),
             task)
         return task_id
-
