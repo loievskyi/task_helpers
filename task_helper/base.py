@@ -25,7 +25,9 @@ class BaseWorkerTaskHelper(object):
 
     The inherited class should provide the ability to:
     - Worker side:
-        - take the task from the queue;
+        - take the one task from the queue;
+        - take many tasks from queue (more productive than taking
+          one task at a time from the queue);
         - return the task response to the client
     """
 
