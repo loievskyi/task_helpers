@@ -29,13 +29,9 @@ class BaseWorkerTaskHelper(object):
         - return the task response to the client
     """
 
-    def get_tasks_iterator(self, *args, **kwargs):
-        """Returns an iterator, which returns tasks, getted from queue.
-        Worker side method."""
-        raise NotImplementedError
-
     def get_tasks(self, *args, **kwargs):
-        """Returns the given number of tasks, getted from queue.
+        """Pops tasks from queue and returns it. The number of task which
+        depends on max_count and the number of elements in the queue.
         Worker side method."""
         raise NotImplementedError
 
