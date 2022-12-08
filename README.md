@@ -1,1 +1,3 @@
-# python_task_helper
+# Task helpers
+
+## A package for creating task helpers.
