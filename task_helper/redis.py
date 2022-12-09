@@ -112,12 +112,11 @@ class RedisWorkerTaskHelper(FullQueueNameMixin, BaseWorkerTaskHelper):
     """
     Class for the worker side of task helpers using redis.
 
-    The inherited class should provide the ability to:
-    - Worker side:
-        - take the one task from the queue;
-        - take many tasks from queue (more productive than taking
-          one task at a time from the queue);
-        - return the task response to the client
+    - Worker side methods:
+        - get_tasks - pops tasks from queue and returns it;
+        - get_task - returns one task from redis queue;
+        - wait_for_task - waits for task and returns it;
+        - return_task_result - returns result to the client side via redis.
     """
 
     result_timeout = 600  # Set None to keep task_result permanently.
@@ -131,43 +130,62 @@ class RedisWorkerTaskHelper(FullQueueNameMixin, BaseWorkerTaskHelper):
         Worker side method.
 
         Task is tuple of (task_id, task_data). The result like
-        [(task_id, task_data), (task_id, task_data), ...]."""
+        [(task_id, task_data), (task_id, task_data), ...].
+
+        * queue_name - queue name, used in the add_task_to_queue method.
+        * max_count - the maximum number of tasks that can be extracted from
+          the queue"""
+
         tasks = self.redis_connection.lpop(
-            self._get_ful_queue_name(queue_name=queue_name, sufix="pending"),
+            self._get_full_queue_name(queue_name=queue_name, sufix="pending"),
             count=max_count)
         if tasks:
             return [pickle.loads(task) for task in tasks]
         return []
 
-    def get_task(self, queue_name, timeout=None, raise_exception=True):
-        """Returns single task from redis queue as tuple (task_id, task_data).
-        If timeout is 0, then wait time = 0s.
-        If timeout is None, then waits task indefinitely.
+    def get_task(self, queue_name):
+        """Returns one task from redis queue as tuple (task_id, task_data).
+        If task doesn't exists, raises exceptions.TaskDoesNotExist.
+        Worker side method.
 
-        If raise_exception is True (default), raises TimeoutError at timeout.
-        Otherwise, returns None in case of timeout.
-        Worker side method."""
-        if timeout == 0:
-            task = self.redis_connection.lpop(
-                self._get_ful_queue_name(queue_name, "pending")
-            )
-        else:
-            task = self.redis_connection.blpop(
-                self._get_ful_queue_name(queue_name, "pending"),
-                timeout=timeout)
-            if task:
-                task = task[-1]
+        * queue_name - queue name, used in the add_task_to_queue method."""
+
+        task = self.redis_connection.lpop(
+            self._get_full_queue_name(queue_name, "pending")
+        )
         if task is None:
-            if raise_exception:
-                raise TimeoutError()
-            return None
+            raise exceptions.TaskDoesNotExist
         task_id, task_data = pickle.loads(task)
+        return task_id, task_data
+
+    def wait_for_task(self, queue_name, timeout=None):
+        """Returns one task from redis queue as tuple (task_id, task_data).
+        If timeout is None (default), then waits task indefinitely.
+        Raises TimeoutError in case of timeout.
+        Worker side method.
+
+        * queue_name - queue name, used in the add_task_to_queue method.
+        * timeout - timeout to wait for the task in seconds. Default is None
+          (Waiting forever until it appears). If specified - raised
+          TimeoutError if time is up"""
+
+        task = self.redis_connection.blpop(
+            self._get_full_queue_name(queue_name, "pending"),
+            timeout=timeout)
+        if task is None:
+            raise TimeoutError
+        task_id, task_data = pickle.loads(task[-1])
         return task_id, task_data
 
     def return_task_result(self, queue_name, task_id, task_data):
         """Return the result of processing the task to the client via redis.
-        Worker side method."""
-        name = self._get_ful_queue_name(
+        Worker side method.
+
+        * queue_name - queue name, used in the add_task_to_queue method.
+        * task_id - id of the task.
+        * task_data - task objects, what will be returned to the client."""
+
+        name = self._get_full_queue_name(
             queue_name=queue_name, sufix="results:") + str(task_id)
         value = pickle.dumps(task_data)
         self.redis_connection.set(name=name, value=value,
