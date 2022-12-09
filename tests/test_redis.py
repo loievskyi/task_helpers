@@ -11,39 +11,41 @@ import timeout_decorator
 from task_helper.redis import (
     FullQueueNameMixin,
     RedisClientTaskHelper,
+    # RedisWorkerTaskHelper,
 )
+from task_helper import exceptions
 
 
-class TestFullQueueNameMixin(unittest.TestCase):
+class FullQueueNameMixinTestCase(unittest.TestCase):
     """
-    Tests to make sure that _get_ful_queue_name is calculating correctly.
+    Tests to make sure that _get_full_queue_name is calculating correctly.
     """
 
     def setUp(self):
         self.mixin = FullQueueNameMixin()
 
-    def test_get_ful_queue_name_with_prefix(self):
+    def test_get_full_queue_name_with_prefix(self):
         self.mixin.prefix_queue = "test_prefix"
-        name = self.mixin._get_ful_queue_name(queue_name="test_queue_name")
+        name = self.mixin._get_full_queue_name(queue_name="test_queue_name")
         self.assertEqual(name, "test_prefix:test_queue_name")
 
-    def test_get_ful_queue_name_with_sufix(self):
+    def test_get_full_queue_name_with_sufix(self):
         self.mixin.prefix_queue = ""
-        name = self.mixin._get_ful_queue_name(
+        name = self.mixin._get_full_queue_name(
             queue_name="test_queue_name",
             sufix="pending")
         self.assertEqual(name, "test_queue_name:pending")
 
-    def test_get_ful_queue_name_with_prefix_and_sufix(self):
+    def test_get_full_queue_name_with_prefix_and_sufix(self):
         self.mixin.prefix_queue = "test_prefix"
-        name = self.mixin._get_ful_queue_name(
+        name = self.mixin._get_full_queue_name(
             queue_name="test_queue_name",
             sufix="pending")
         self.assertEqual(name, "test_prefix:test_queue_name:pending")
 
-    def test_get_ful_queue_name_without_prefix_sufix(self):
+    def test_get_full_queue_name_without_prefix_sufix(self):
         self.mixin.prefix_queue = ""
-        name = self.mixin._get_ful_queue_name("test_queue_name")
+        name = self.mixin._get_full_queue_name("test_queue_name")
         self.assertEqual(name, "test_queue_name")
 
 
@@ -68,21 +70,24 @@ class RedisSetupMixin:
             db=redis_db,
             password=redis_password)
         self.redis_connection.flushdb()
-        self.task_helper = RedisClientTaskHelper(
-            redis_connection=self.redis_connection)
 
 
 def test_func(text):
     return f"{text}{text}"
 
 
-class TestRedisClientTaskHelper(RedisSetupMixin, unittest.TestCase):
+class RedisClientTaskHelperTestCase(RedisSetupMixin, unittest.TestCase):
     """
     Tests to make sure that RedisClientTaskHelper is working correctly.
     """
 
     def setUp(self):
         super().setUp()
+        self.task_helper = RedisClientTaskHelper(
+            redis_connection=self.redis_connection)
+
+    class TimeoutTestException(TimeoutError):
+        pass
 
     def test_add_task_to_queue_as_dict(self):
         start_task_data = {
@@ -94,7 +99,7 @@ class TestRedisClientTaskHelper(RedisSetupMixin, unittest.TestCase):
             task_data=start_task_data)
 
         task = self.redis_connection.lpop(
-            self.task_helper._get_ful_queue_name(
+            self.task_helper._get_full_queue_name(
                 queue_name="test_queue_name", sufix="pending")
         )
 
@@ -110,7 +115,7 @@ class TestRedisClientTaskHelper(RedisSetupMixin, unittest.TestCase):
             task_data=start_task_data)
 
         task = self.redis_connection.lpop(
-            self.task_helper._get_ful_queue_name(
+            self.task_helper._get_full_queue_name(
                 queue_name="test_queue_name", sufix="pending")
         )
 
@@ -123,7 +128,7 @@ class TestRedisClientTaskHelper(RedisSetupMixin, unittest.TestCase):
     def test_get_task_result_if_delete_data_True(self):
         before_task_result = "test_result_123"
         before_task_id = uuid.uuid1()
-        key_name = self.task_helper._get_ful_queue_name(
+        key_name = self.task_helper._get_full_queue_name(
             queue_name="test_queue_name",
             sufix="results:") + str(before_task_id)
         value = pickle.dumps(before_task_result)
@@ -141,7 +146,7 @@ class TestRedisClientTaskHelper(RedisSetupMixin, unittest.TestCase):
     def test_get_task_result_if_delete_data_False(self):
         before_task_result = "test_result_123"
         before_task_id = uuid.uuid1()
-        key_name = self.task_helper._get_ful_queue_name(
+        key_name = self.task_helper._get_full_queue_name(
             queue_name="test_queue_name",
             sufix="results:") + str(before_task_id)
         value = pickle.dumps(before_task_result)
@@ -157,29 +162,72 @@ class TestRedisClientTaskHelper(RedisSetupMixin, unittest.TestCase):
         self.assertEqual(before_task_result, after_task_result)
         self.assertEqual(after_task_data, before_task_result)
 
-    def test_get_task_result_if_timeout(self):
-        before_task_id = uuid.uuid1()
-        with self.assertRaises(TimeoutError):
+    def test_get_task_result_if_result_doesnt_exists(self):
+        task_id = uuid.uuid1()
+
+        with self.assertRaises(exceptions.TaskResultDoesNotExist):
             self.task_helper.get_task_result(
                 queue_name="test_queue_name",
-                task_id=before_task_id,
-                timeout=2)
+                task_id=task_id)
 
-    class TimeoutTestException(TimeoutError):
-        pass
-
-    @timeout_decorator.timeout(2, timeout_exception=TimeoutTestException)
-    def test_get_task_result_if_timeout_is_None(self):
+    def test_wait_for_task_result_if_delete_data_True(self):
+        before_task_result = "test_result_123"
         before_task_id = uuid.uuid1()
-        with self.assertRaises(self.TimeoutTestException) as context:
-            self.task_helper.get_task_result(
+        key_name = self.task_helper._get_full_queue_name(
+            queue_name="test_queue_name",
+            sufix="results:") + str(before_task_id)
+        value = pickle.dumps(before_task_result)
+        self.redis_connection.set(name=key_name, value=value)
+
+        after_task_result = self.task_helper.wait_for_task_result(
+            queue_name="test_queue_name",
+            task_id=before_task_id,
+            delete_data=True)
+        redis_task_data = self.redis_connection.get(name=key_name)
+
+        self.assertEqual(before_task_result, after_task_result)
+        self.assertIsNone(redis_task_data)
+
+    def test_wait_for_task_result_if_delete_data_False(self):
+        before_task_result = "test_result_123"
+        before_task_id = uuid.uuid1()
+        key_name = self.task_helper._get_full_queue_name(
+            queue_name="test_queue_name",
+            sufix="results:") + str(before_task_id)
+        value = pickle.dumps(before_task_result)
+        self.redis_connection.set(name=key_name, value=value)
+
+        after_task_result = self.task_helper.wait_for_task_result(
+            queue_name="test_queue_name",
+            task_id=before_task_id,
+            delete_data=False)
+        raw_task_data = self.redis_connection.get(name=key_name)
+        after_task_data = pickle.loads(raw_task_data)
+
+        self.assertEqual(before_task_result, after_task_result)
+        self.assertEqual(after_task_data, before_task_result)
+
+    def test_wait_for_task_result_if_timeout(self):
+        before_task_id = uuid.uuid1()
+        with self.assertRaises(TimeoutError):
+            self.task_helper.wait_for_task_result(
+                queue_name="test_queue_name",
+                task_id=before_task_id,
+                timeout=1)
+
+    @timeout_decorator.timeout(1, timeout_exception=TimeoutTestException)
+    def test_wait_for_task_result_if_timeout_is_None(self):
+        before_task_id = uuid.uuid1()
+        supposed_exceptions = (
+            self.TimeoutTestException, redis.exceptions.TimeoutError)
+        with self.assertRaises(supposed_exceptions) as context:
+            self.task_helper.wait_for_task_result(
                 queue_name="test_queue_name",
                 task_id=before_task_id,
                 timeout=None)
-        self.assertEqual(type(context.exception), self.TimeoutTestException)
         self.assertNotEqual(type(context.exception), TimeoutError)
 
-    def test_get_task_result_wait_result(self):
+    def test_wait_for_task_result_wait_result(self):
         def set_result_to_redis(redis_connection, key, value, sleep_time):
             time.sleep(sleep_time)
             redis_connection.set(key, value)
@@ -187,7 +235,7 @@ class TestRedisClientTaskHelper(RedisSetupMixin, unittest.TestCase):
         before_task_result = "test_result_123"
         before_task_id = uuid.uuid1()
 
-        key_name = self.task_helper._get_ful_queue_name(
+        key_name = self.task_helper._get_full_queue_name(
             queue_name="test_queue_name",
             sufix="results:") + str(before_task_id)
         value = pickle.dumps(before_task_result)
@@ -195,11 +243,11 @@ class TestRedisClientTaskHelper(RedisSetupMixin, unittest.TestCase):
             "redis_connection": self.redis_connection,
             "key": key_name,
             "value": value,
-            "sleep_time": 2,
+            "sleep_time": 1,
         })
         thread.start()
 
-        after_task_result = self.task_helper.get_task_result(
+        after_task_result = self.task_helper.wait_for_task_result(
             queue_name="test_queue_name",
             task_id=before_task_id,
             delete_data=True)

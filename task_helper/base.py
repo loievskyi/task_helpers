@@ -3,14 +3,22 @@ class BaseClientTaskHelper(object):
     Base class for the client side of task helpers.
 
     The inherited class should provide the ability to:
-    - Client side:
-        - to add task objects (not only as functions) to the queue;
-        - wait for the result;
+    Client side methods:
+        - get_task_result - returns task retuls, if it exists
+        - wait_for_task_result - Waits for the task result to appear
+        - add_task_to_queue - adds a task to the redis queue for processing
     """
 
     def get_task_result(self, *args, **kwargs):
-        """Waits for the task result to appear, and then returns it.
+        """Returns task retuls, if it exists.
+        Otherwise, raises exceptions.TaskResultDoesNotExist
         Client side method."""
+        raise NotImplementedError
+
+    def wait_for_task_result(self, *args, **kwargs):
+        """Waits for the task result to appear, and then returns it.
+        Raises TimeoutError in case of timeout.
+        Client side method"""
         raise NotImplementedError
 
     def add_task_to_queue(self, queue_name, task_data, sufix="pending"):
@@ -38,7 +46,7 @@ class BaseWorkerTaskHelper(object):
         raise NotImplementedError
 
     def get_task(self, *args, **kwargs):
-        """Returns single task from the queue.
+        """Returns one task from the queue.
         Worker side method."""
         raise NotImplementedError
 
