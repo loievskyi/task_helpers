@@ -190,3 +190,24 @@ class RedisWorkerTaskHelper(FullQueueNameMixin, BaseWorkerTaskHelper):
         value = pickle.dumps(task_data)
         self.redis_connection.set(name=name, value=value,
                                   ex=self.result_timeout)
+
+
+class RedisClientWorkerTaskHelper(
+        RedisClientTaskHelper,
+        RedisWorkerTaskHelper,
+        BaseClientWorkerTaskHelper):
+    """
+    Class for the client and worker sides of task helpers, works via redis.
+
+    Client side methods:
+        - get_task_result - returns task retuls, if it exists
+        - wait_for_task_result - Waits for the task result to appear
+        - add_task_to_queue - adds a task to the redis queue for processing
+
+    - Worker side methods:
+        - get_tasks - pops tasks from queue and returns it;
+        - get_task - returns one task from redis queue;
+        - wait_for_task - waits for task and returns it;
+        - return_task_result - returns result to the client side via redis.    
+    """
+    pass

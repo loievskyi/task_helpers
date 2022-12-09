@@ -12,6 +12,7 @@ from task_helper.redis import (
     FullQueueNameMixin,
     RedisClientTaskHelper,
     RedisWorkerTaskHelper,
+    RedisClientWorkerTaskHelper,
 )
 from task_helper import exceptions
 
@@ -440,6 +441,19 @@ class RedisWorkerTaskHelperTestCase(RedisSetupMixin, unittest.TestCase):
             before_task_id, before_task_data = before_tasks[num]
             self.assertEqual(before_task_id, after_task_id)
             self.assertEqual(before_task_data, after_task_data)
+
+
+class RedisClientWorkerTaskHelperTestCase(
+        RedisClientTaskHelperTestCase,
+        RedisWorkerTaskHelperTestCase):
+    """
+    Tests to make sure that RedisClientWorkerTaskHelper is working correctly.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.task_helper = RedisClientWorkerTaskHelper(
+            redis_connection=self.redis_connection)
 
 
 if __name__ == "__main__":
