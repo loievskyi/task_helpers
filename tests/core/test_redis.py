@@ -8,13 +8,13 @@ import threading
 import redis
 import timeout_decorator
 
-from task_helper.redis import (
+from task_helpers.core.redis import (
     FullQueueNameMixin,
     RedisClientTaskHelper,
     RedisWorkerTaskHelper,
     RedisClientWorkerTaskHelper,
 )
-from task_helper import exceptions
+from task_helpers import exceptions
 
 
 class FullQueueNameMixinTestCase(unittest.TestCase):

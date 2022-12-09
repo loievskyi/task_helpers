@@ -8,7 +8,7 @@ from .base import (
     BaseWorkerTaskHelper,
     BaseClientWorkerTaskHelper
 )
-from . import exceptions
+from .. import exceptions
 
 
 class FullQueueNameMixin:
@@ -208,6 +208,6 @@ class RedisClientWorkerTaskHelper(
         - get_tasks - pops tasks from queue and returns it;
         - get_task - returns one task from redis queue;
         - wait_for_task - waits for task and returns it;
-        - return_task_result - returns result to the client side via redis.    
+        - return_task_result - returns result to the client side via redis.
     """
     pass
