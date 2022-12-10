@@ -4,20 +4,20 @@ from setuptools import find_packages, setup
 
 
 def read_file(file_path):
-    return open(file_path, "rt", encoding="utf-8").read()
+    return open(file_path, "r", encoding="utf-8").read()
 
 
 setup(
     name="task_helpers",
-    version="0.0.3",
+    version="0.0.5",
     url="https://github.com/loievskyi/task_helpers",
     license="BSD",
     description="A package for creating task helpers.",
-    read_file=read_file("README.md"),
+    long_description=read_file("README.md"),
     long_description_content_type="text/markdown",
     author="Viacheslav Loievskyi",
     author_email="loievskyi.slava@gmail.com",
-    packages=find_packages(exclude=["tests*"]),
+    packages=find_packages(exclude=["tests*", "task_helpers/future*"]),
     include_package_data=True,
     install_requires=["redis", "aioredis"],
     python_requires=">=3.8",
