@@ -1,4 +1,4 @@
-class BaseClientTaskHelper(object):
+class BaseClientTaskCourier(object):
     """
     Base class for the client side of task helpers.
 
@@ -27,7 +27,7 @@ class BaseClientTaskHelper(object):
         raise NotImplementedError
 
 
-class BaseWorkerTaskHelper(object):
+class BaseWorkerTaskCourier(object):
     """
     Base class for the worker side of task helpers.
 
@@ -57,7 +57,7 @@ class BaseWorkerTaskHelper(object):
         raise NotImplementedError
 
 
-class BaseClientWorkerTaskHelper(BaseWorkerTaskHelper, BaseClientTaskHelper):
+class BaseClientWorkerTaskCourier(BaseWorkerTaskCourier, BaseClientTaskCourier):
     """
     Base class for the client and worker sides of task helpers.
     The inherited class should provide the ability to:

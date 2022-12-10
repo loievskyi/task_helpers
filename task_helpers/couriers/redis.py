@@ -4,9 +4,9 @@ import datetime
 import time
 
 from .base import (
-    BaseClientTaskHelper,
-    BaseWorkerTaskHelper,
-    BaseClientWorkerTaskHelper
+    BaseClientTaskCourier,
+    BaseWorkerTaskCourier,
+    BaseClientWorkerTaskCourier
 )
 from .. import exceptions
 
@@ -29,7 +29,7 @@ class FullQueueNameMixin:
         return full_queue_name
 
 
-class RedisClientTaskHelper(FullQueueNameMixin, BaseClientTaskHelper):
+class RedisClientTaskCourier(FullQueueNameMixin, BaseClientTaskCourier):
     """
     Class for the client side of task helpers using redis.
 
@@ -108,7 +108,7 @@ class RedisClientTaskHelper(FullQueueNameMixin, BaseClientTaskHelper):
         return task_id
 
 
-class RedisWorkerTaskHelper(FullQueueNameMixin, BaseWorkerTaskHelper):
+class RedisWorkerTaskCourier(FullQueueNameMixin, BaseWorkerTaskCourier):
     """
     Class for the worker side of task helpers using redis.
 
@@ -192,10 +192,10 @@ class RedisWorkerTaskHelper(FullQueueNameMixin, BaseWorkerTaskHelper):
                                   ex=self.result_timeout)
 
 
-class RedisClientWorkerTaskHelper(
-        RedisClientTaskHelper,
-        RedisWorkerTaskHelper,
-        BaseClientWorkerTaskHelper):
+class RedisClientWorkerTaskCourier(
+        RedisClientTaskCourier,
+        RedisWorkerTaskCourier,
+        BaseClientWorkerTaskCourier):
     """
     Class for the client and worker sides of task helpers, works via redis.
 
