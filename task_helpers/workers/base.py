@@ -37,7 +37,7 @@ class BaseWorker:
         """
         raise NotImplementedError
 
-    def perform(self, total_tasks=1000):
+    def perform(self, total_tasks):
         """
         The main method that starts the task worker.
         Takes a task from the queue, calls the "perform_task method",
