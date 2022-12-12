@@ -82,9 +82,11 @@ class RedisClientTaskCourier(FullQueueNameMixin, BaseClientTaskCourier):
         utc_start_time = datetime.datetime.utcnow()
         if isinstance(timeout, int) or isinstance(timeout, float):
             timeout = datetime.timedelta(seconds=timeout)
-        while not timeout or \
+        first_iteration = True
+        while first_iteration or not timeout or \
                 utc_start_time + timeout > datetime.datetime.utcnow():
             try:
+                first_iteration = False
                 return self.get_task_result(
                     queue_name=queue_name,
                     task_id=task_id,
