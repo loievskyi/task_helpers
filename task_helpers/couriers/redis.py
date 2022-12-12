@@ -10,6 +10,13 @@ from .base import (
 )
 from .. import exceptions
 
+__all__ = [
+    "FullQueueNameMixin",
+    "RedisClientTaskCourier",
+    "RedisWorkerTaskCourier",
+    "RedisClientWorkerTaskCourier",
+]
+
 
 class FullQueueNameMixin:
     """
@@ -43,6 +50,9 @@ class RedisClientTaskCourier(FullQueueNameMixin, BaseClientTaskCourier):
 
     def __init__(self, redis_connection):
         self.redis_connection = redis_connection
+
+    def _generate_task_id(self):
+        return uuid.uuid1()
 
     def get_task_result(
             self, queue_name, task_id, delete_data=True):
@@ -102,7 +112,7 @@ class RedisClientTaskCourier(FullQueueNameMixin, BaseClientTaskCourier):
         - queue_name - queue name, used in the add_task_to_queue method.
         - task_data - task objects, what will be added to redis qeueue."""
 
-        task_id = uuid.uuid1()
+        task_id = self._generate_task_id()
         task = pickle.dumps((task_id, task_data))
         self.redis_connection.rpush(
             self._get_full_queue_name(queue_name=queue_name, sufix="pending"),
