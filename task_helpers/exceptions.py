@@ -8,3 +8,7 @@ class TaskDoesNotExist(DoesNotExistError):
 
 class TaskResultDoesNotExist(DoesNotExistError):
     pass
+
+
+class PerformTaskError:
+    pass
