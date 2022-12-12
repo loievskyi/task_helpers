@@ -50,9 +50,9 @@ class RedisClientTaskCourier(FullQueueNameMixin, BaseClientTaskCourier):
         Otherwise, raises exceptions.TaskResultDoesNotExist
         Client side method.
 
-        * queue_name - queue name, used in the add_task_to_queue method.
-        * task_id - id of the task that the add_task_to_queue method returned.
-        * delete_data - Whether to remove data from the queue after retrieving.
+        - queue_name - queue name, used in the add_task_to_queue method.
+        - task_id - id of the task that the add_task_to_queue method returned.
+        - delete_data - Whether to remove data from the queue after retrieving.
           default is True."""
 
         name = self._get_full_queue_name(queue_name, "results:") + str(task_id)
@@ -71,11 +71,11 @@ class RedisClientTaskCourier(FullQueueNameMixin, BaseClientTaskCourier):
         a result availability. Raises TimeoutError in case of timeout.
         Client side method.
 
-        * queue_name - queue name, used in the add_task_to_queue method.
-        * task_id - id of the task that the add_task_to_queue method returned.
-        * delete_data - Whether to remove data from the queue after retrieving.
+        - queue_name - queue name, used in the add_task_to_queue method.
+        - task_id - id of the task that the add_task_to_queue method returned.
+        - delete_data - Whether to remove data from the queue after retrieving.
           default is True.
-        * timeout - timeout to wait for the result in seconds or as an
+        - timeout - timeout to wait for the result in seconds or as an
           datetime.timedelta object. Default is None (wait indefinitely until
           it appears). If specified - raises TimeoutError if time is up"""
 
@@ -99,8 +99,8 @@ class RedisClientTaskCourier(FullQueueNameMixin, BaseClientTaskCourier):
         """Adds a task to the redis queue for processing. Returns task_id.
         Client side method.
 
-        * queue_name - queue name, used in the add_task_to_queue method.
-        * task_data - task objects, what will be added to redis qeueue."""
+        - queue_name - queue name, used in the add_task_to_queue method.
+        - task_data - task objects, what will be added to redis qeueue."""
 
         task_id = uuid.uuid1()
         task = pickle.dumps((task_id, task_data))
@@ -134,8 +134,8 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, BaseWorkerTaskCourier):
         Task is tuple of (task_id, task_data). The result like
         [(task_id, task_data), (task_id, task_data), ...].
 
-        * queue_name - queue name, used in the add_task_to_queue method.
-        * max_count - the maximum number of tasks that can be extracted from
+        - queue_name - queue name, used in the add_task_to_queue method.
+        - max_count - the maximum number of tasks that can be extracted from
           the queue"""
 
         tasks = self.redis_connection.lpop(
@@ -150,7 +150,7 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, BaseWorkerTaskCourier):
         If task doesn't exists, raises exceptions.TaskDoesNotExist.
         Worker side method.
 
-        * queue_name - queue name, used in the add_task_to_queue method."""
+        - queue_name - queue name, used in the add_task_to_queue method."""
 
         task = self.redis_connection.lpop(
             self._get_full_queue_name(queue_name, "pending")
@@ -166,8 +166,8 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, BaseWorkerTaskCourier):
         Raises TimeoutError in case of timeout.
         Worker side method.
 
-        * queue_name - queue name, used in the add_task_to_queue method.
-        * timeout - timeout to wait for the task in seconds. Default is None
+        - queue_name - queue name, used in the add_task_to_queue method.
+        - timeout - timeout to wait for the task in seconds. Default is None
           (Waiting forever until it appears). If specified - raised
           TimeoutError if time is up"""
 
@@ -183,9 +183,9 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, BaseWorkerTaskCourier):
         """Return the result of processing the task to the client via redis.
         Worker side method.
 
-        * queue_name - queue name, used in the add_task_to_queue method.
-        * task_id - id of the task.
-        * task_data - task objects, what will be returned to the client."""
+        - queue_name - queue name, used in the add_task_to_queue method.
+        - task_id - id of the task.
+        - task_data - task objects, what will be returned to the client."""
 
         name = self._get_full_queue_name(
             queue_name=queue_name, sufix="results:") + str(task_id)

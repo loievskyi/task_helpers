@@ -1,4 +1,5 @@
 # Task helpers - a package for creating task helpers.
+The library is under development. Classes, their location, description and behavior may change.
 
 ## couriers module
 The module allows you to work with tasks.
@@ -17,3 +18,6 @@ Or, for example, different clients (from different threads) can send many tasks 
   - return_task_result - returns result to the client side.
 ### ClientWorkerTaskCourier:
   - all of the above
+
+## workers module
+  - In developing
