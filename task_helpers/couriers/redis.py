@@ -125,7 +125,7 @@ class RedisClientTaskCourier(FullQueueNameMixin, BaseClientTaskCourier):
         or False if there is no task result yet."""
 
         name = self._get_full_queue_name(queue_name, "results:") + str(task_id)
-        return self.redis_connection.exists(name=name)
+        return self.redis_connection.exists(name)
 
 
 class RedisWorkerTaskCourier(FullQueueNameMixin, BaseWorkerTaskCourier):
