@@ -119,6 +119,14 @@ class RedisClientTaskCourier(FullQueueNameMixin, BaseClientTaskCourier):
             task)
         return task_id
 
+    def check_for_done(self, queue_name, task_id):
+        """Checks if the task has completed.
+        Returns True - if task is done (successful or unsuccessful),
+        or False if there is no task result yet."""
+
+        name = self._get_full_queue_name(queue_name, "results:") + str(task_id)
+        return self.redis_connection.exists(name=name)
+
 
 class RedisWorkerTaskCourier(FullQueueNameMixin, BaseWorkerTaskCourier):
     """
