@@ -90,6 +90,11 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
     class TimeoutTestException(TimeoutError):
         pass
 
+    def test___init__(self):
+        courier = RedisClientTaskCourier(self.task_courier.redis_connection)
+        self.assertEqual(courier.redis_connection,
+                         self.task_courier.redis_connection)
+
     def test__generate_task_id(self):
         task_id = self.task_courier._generate_task_id()
         self.assertEqual(type(task_id), uuid.UUID)
@@ -333,6 +338,11 @@ class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
     class TimeoutTestException(TimeoutError):
         pass
 
+    def test___init__(self):
+        courier = RedisClientTaskCourier(self.task_courier.redis_connection)
+        self.assertEqual(courier.redis_connection,
+                         self.task_courier.redis_connection)
+
     def test_return_task_result(self):
         queue_name = "test_queue"
         task_id = uuid.uuid1()
@@ -518,6 +528,11 @@ class RedisClientWorkerTaskCourierTestCase(
         super().setUp()
         self.task_courier = RedisClientWorkerTaskCourier(
             redis_connection=self.redis_connection)
+
+    def test___init__(self):
+        courier = RedisClientTaskCourier(self.task_courier.redis_connection)
+        self.assertEqual(courier.redis_connection,
+                         self.task_courier.redis_connection)
 
 
 if __name__ == "__main__":
