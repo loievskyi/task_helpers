@@ -56,7 +56,7 @@ class BaseWorker:
                     self.task_courier.return_task_result(
                         queue_name=self.queue_name,
                         task_id=task[0],
-                        task_data=exceptions.PerformTaskError)
+                        task_data=exceptions.PerformTaskError(exception=ex))
             else:
                 if self.return_task_result:
                     self.task_courier.return_task_result(

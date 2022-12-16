@@ -11,5 +11,6 @@ class TaskResultDoesNotExist(DoesNotExistError):
 
 
 class PerformTaskError(Exception):
-    def __init__(self, error_data=None):
+    def __init__(self, exception=None, error_data=None):
+        self.exception = exception
         self.error_data = error_data

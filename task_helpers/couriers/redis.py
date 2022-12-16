@@ -56,8 +56,9 @@ class RedisClientTaskCourier(FullQueueNameMixin, BaseClientTaskCourier):
 
     def get_task_result(
             self, queue_name, task_id, delete_data=True):
-        """Returns task retuls, if it exists.
-        Otherwise, raises exceptions.TaskResultDoesNotExist
+        """Returns task retult, if it exists.
+        Otherwise, raises exceptions.TaskResultDoesNotExist. If an error occurs
+        during the execution of the task raises exceptions.PerformTaskError.
         Client side method.
 
         - queue_name - queue name, used in the add_task_to_queue method.
@@ -72,13 +73,17 @@ class RedisClientTaskCourier(FullQueueNameMixin, BaseClientTaskCourier):
             raw_data = self.redis_connection.get(name=name)
         if raw_data is None:
             raise exceptions.TaskResultDoesNotExist
-        return pickle.loads(raw_data)
+        result = pickle.loads(raw_data)
+        if isinstance(result, exceptions.PerformTaskError):
+            raise result
+        return result
 
     def wait_for_task_result(
             self, queue_name, task_id, delete_data=True, timeout=None):
-        """Waits for the task result to appear, and then returns it.
-        Blocking method. Checks every self.refresh_timeout seconds for
-        a result availability. Raises TimeoutError in case of timeout.
+        """Waits for the task result to appear, and then returns it. Blocking
+        method. Checks every self.refresh_timeout seconds for a result.
+        Raises TimeoutError in case of timeout. If an error occurs during the
+        execution of the task raises exceptions.PerformTaskError.
         Client side method.
 
         - queue_name - queue name, used in the add_task_to_queue method.
