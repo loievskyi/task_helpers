@@ -90,6 +90,10 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
     class TimeoutTestException(TimeoutError):
         pass
 
+    def test__generate_task_id(self):
+        task_id = self.task_courier._generate_task_id()
+        self.assertEqual(type(task_id), uuid.UUID)
+
     def test_add_task_to_queue_as_dict(self):
         start_task_data = {
             "test_key": "test_value",
