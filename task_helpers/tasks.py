@@ -1,8 +1,6 @@
 import uuid
 import datetime
 
-from task_helpers import exceptions
-
 
 class Task:
     """

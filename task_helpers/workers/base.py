@@ -52,15 +52,12 @@ class BaseWorker:
             except Exception as ex:
                 logging.error(f"An error has occured on "
                               f"Worker.perform.perform_task: {ex}")
-                if self.return_task_result:
-                    self.task_courier.return_task_result(
-                        queue_name=self.queue_name,
-                        task_id=task[0],
-                        task_result=exceptions.PerformTaskError(exception=ex))
-            else:
-                if self.return_task_result:
-                    self.task_courier.return_task_result(
-                        queue_name=self.queue_name,
-                        task_id=task[0],
-                        task_result=task_result)
+                task_result = exceptions.PerformTaskError(exception=ex)
+
+            if self.return_task_result:
+                self.task_courier.return_task_result(
+                    queue_name=self.queue_name,
+                    task_id=task[0],
+                    task_result=task_result)
+
             time.sleep(self.after_iteration_sleep_time)
