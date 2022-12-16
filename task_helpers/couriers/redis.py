@@ -202,7 +202,7 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, BaseWorkerTaskCourier):
         task_id, task_data = pickle.loads(task[-1])
         return task_id, task_data
 
-    def return_task_result(self, queue_name, task_id, task_data):
+    def return_task_result(self, queue_name, task_id, task_result):
         """Return the result of processing the task to the client via redis.
         Worker side method.
 
@@ -212,7 +212,7 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, BaseWorkerTaskCourier):
 
         name = self._get_full_queue_name(
             queue_name=queue_name, sufix="results:") + str(task_id)
-        value = pickle.dumps(task_data)
+        value = pickle.dumps(task_result)
         self.redis_connection.set(name=name, value=value,
                                   ex=self.result_timeout)
 

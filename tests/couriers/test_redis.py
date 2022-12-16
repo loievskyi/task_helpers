@@ -336,18 +336,18 @@ class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
     def test_return_task_result(self):
         queue_name = "test_queue"
         task_id = uuid.uuid1()
-        task_data = "test_data_test_return_task_result"
+        task_result = "test_data_test_return_task_result"
         self.task_courier.result_timeout = 1
 
         self.task_courier.return_task_result(
             queue_name=queue_name,
             task_id=task_id,
-            task_data=task_data)
+            task_result=task_result)
 
         name = self.task_courier._get_full_queue_name(
             queue_name=queue_name, sufix="results:") + str(task_id)
         value = pickle.loads(self.redis_connection.get(name))
-        self.assertEqual(value, task_data)
+        self.assertEqual(value, task_result)
         time.sleep(2)
         value = self.redis_connection.get(name)
         self.assertIsNone(value)
