@@ -73,10 +73,7 @@ class RedisClientTaskCourier(FullQueueNameMixin, BaseClientTaskCourier):
             raw_data = self.redis_connection.get(name=name)
         if raw_data is None:
             raise exceptions.TaskResultDoesNotExist
-        result = pickle.loads(raw_data)
-        if isinstance(result, exceptions.PerformTaskError):
-            raise result
-        return result
+        return pickle.loads(raw_data)
 
     def wait_for_task_result(
             self, queue_name, task_id, delete_data=True, timeout=None):

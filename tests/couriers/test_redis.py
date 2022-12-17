@@ -167,12 +167,12 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         value = pickle.dumps(before_task_result)
         self.redis_connection.set(name=key_name, value=value)
 
-        with self.assertRaises(exceptions.PerformTaskError) as context:
-            self.task_courier.get_task_result(
-                queue_name="test_queue_name",
-                task_id=before_task_id)
-        self.assertEqual(type(context.exception.exception), Exception)
-        self.assertEqual(context.exception.error_data, "ERROR TEXT")
+        result = self.task_courier.get_task_result(
+            queue_name="test_queue_name",
+            task_id=before_task_id)
+        self.assertEqual(type(result), exceptions.PerformTaskError)
+        self.assertEqual(type(result.exception), Exception)
+        self.assertEqual(result.error_data, "ERROR TEXT")
 
     def test_wait_for_task_result_if_delete_data_True(self):
         before_task_result = "test_result_123"
@@ -279,7 +279,6 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         after_task_result = self.task_courier.get_task_result(
             queue_name="test_queue_name",
             task_id=before_task_id)
-
         self.assertEqual(done_status, True)
         self.assertEqual(after_task_result, before_task_result)
 
@@ -295,11 +294,11 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         done_status = self.task_courier.check_for_done(
             queue_name="test_queue_name",
             task_id=before_task_id)
-        with self.assertRaises(exceptions.PerformTaskError):
-            self.task_courier.get_task_result(
-                queue_name="test_queue_name",
-                task_id=before_task_id)
+        result = self.task_courier.get_task_result(
+            queue_name="test_queue_name",
+            task_id=before_task_id)
         self.assertEqual(done_status, True)
+        self.assertEqual(type(result), exceptions.PerformTaskError)
 
 
 class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
