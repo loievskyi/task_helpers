@@ -2,6 +2,7 @@ import time
 import logging
 
 from task_helpers.workers.base import BaseWorker
+from task_helper import exceptions
 
 
 class PerformManyWorker(BaseWorker):
@@ -64,19 +65,18 @@ class PerformManyWorker(BaseWorker):
         for num_task in range(total_iterations):
             tasks = self.wait_for_tasks()
             try:
-                tasks = self.perform_many_tasks(tasks)
+                task_id_result_tuples = self.perform_many_tasks(tasks)
             except Exception as ex:
                 logging.error(f"An error has occured on "
                               f"Worker.perform.perform_many_tasks: {ex}")
-                for task in tasks:
-                    self.task_courier.add_task_to_queue(
+                task_id_result_tuples = [(task_id, exceptions.PerformTaskError)
+                                         for task_id, task_data in tasks]
+
+            if self.return_task_result:
+                for task_id, task_result in task_id_result_tuples:
+                    self.task_courier.return_task_result(
                         queue_name=self.queue_name,
-                        task_data=task[1])
-            else:
-                if self.return_task_result:
-                    for task in tasks:
-                        self.task_courier.return_task_result(
-                            queue_name=self.queue_name,
-                            task_id=task[0],
-                            task_result=task[1])
+                        task_id=task_id,
+                        task_result=task_result)
+
             time.sleep(self.after_iteration_sleep_time)
