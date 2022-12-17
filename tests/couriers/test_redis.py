@@ -1,4 +1,3 @@
-import os
 import unittest
 import pickle
 import uuid
@@ -15,6 +14,7 @@ from task_helpers.couriers.redis import (
     RedisClientWorkerTaskCourier,
 )
 from task_helpers import exceptions
+from ..mixins import RedisSetupMixin
 
 
 class FullQueueNameMixinTestCase(unittest.TestCase):
@@ -48,29 +48,6 @@ class FullQueueNameMixinTestCase(unittest.TestCase):
         self.mixin.prefix_queue = ""
         name = self.mixin._get_full_queue_name("test_queue_name")
         self.assertEqual(name, "test_queue_name")
-
-
-class RedisSetupMixin:
-    """
-    mixin for redis connection initializing.
-    """
-
-    def setUp(self):
-        redis_host = os.environ.get("REDIS_HOST")
-        redis_port = os.environ.get("REDIS_PORT")
-        redis_db = os.environ.get("REDIS_DB")
-        redis_password = os.environ.get("REDIS_PASSWORD", None)
-
-        assert redis_host is not None, "redis_host is None"
-        assert redis_port is not None, "redis_port is None"
-        assert redis_db is not None, "redis_db is None"
-
-        self.redis_connection = redis.Redis(
-            host=redis_host,
-            port=redis_port,
-            db=redis_db,
-            password=redis_password)
-        self.redis_connection.flushdb()
 
 
 def test_func(text):
