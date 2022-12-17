@@ -41,9 +41,10 @@ class RedisClientTaskCourier(FullQueueNameMixin, BaseClientTaskCourier):
     Class for the client side of task helpers using redis.
 
     Client side methods:
-        - get_task_result - returns task retuls, if it exists
-        - wait_for_task_result - Waits for the task result to appear
-        - add_task_to_queue - adds a task to the redis queue for processing
+        - get_task_result - returns task retuls, if it exists.
+        - wait_for_task_result - Waits for the task result to appear.
+        - add_task_to_queue - adds a task to the redis queue for processing.
+        - check_for_done - Checks if the task has completed.
     """
 
     refresh_timeout = 0.1
@@ -54,8 +55,7 @@ class RedisClientTaskCourier(FullQueueNameMixin, BaseClientTaskCourier):
     def _generate_task_id(self):
         return uuid.uuid1()
 
-    def get_task_result(
-            self, queue_name, task_id, delete_data=True):
+    def get_task_result(self, queue_name, task_id, delete_data=True):
         """Returns task retult, if it exists.
         Otherwise, raises exceptions.TaskResultDoesNotExist. If an error occurs
         during the execution of the task raises exceptions.PerformTaskError.
@@ -137,10 +137,10 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, BaseWorkerTaskCourier):
     """
     Class for the worker side of task helpers using redis.
 
-    - Worker side methods:
-        - get_tasks - pops tasks from queue and returns it;
-        - get_task - returns one task from redis queue;
-        - wait_for_task - waits for task and returns it;
+    Worker side methods:
+        - get_tasks - pops tasks from queue and returns it.
+        - get_task - returns one task from redis queue.
+        - wait_for_task - waits for task and returns it.
         - return_task_result - returns result to the client side via redis.
     """
 
@@ -225,14 +225,15 @@ class RedisClientWorkerTaskCourier(
     Class for the client and worker sides of task helpers, works via redis.
 
     Client side methods:
-        - get_task_result - returns task retuls, if it exists
-        - wait_for_task_result - Waits for the task result to appear
-        - add_task_to_queue - adds a task to the redis queue for processing
+        - get_task_result - returns task retuls, if it exists.
+        - wait_for_task_result - Waits for the task result to appear.
+        - add_task_to_queue - adds a task to the redis queue for processing.
+        - check_for_done - Checks if the task has completed.
 
-    - Worker side methods:
-        - get_tasks - pops tasks from queue and returns it;
-        - get_task - returns one task from redis queue;
-        - wait_for_task - waits for task and returns it;
+    Worker side methods:
+        - get_tasks - pops tasks from queue and returns it.
+        - get_task - returns one task from redis queue.
+        - wait_for_task - waits for task and returns it.
         - return_task_result - returns result to the client side via redis.
     """
     pass
