@@ -1,9 +1,10 @@
 import time
 import logging
-from typing import List, Union, Tuple
+from typing import List, Union
 
 from task_helpers.couriers.abstract import AbstractWorkerTaskCourier
 from task_helpers.workers.abstract import AbstractWorker
+from task_helpers.tasks import Task
 
 
 class BaseWorker(AbstractWorker):
@@ -32,12 +33,12 @@ class BaseWorker(AbstractWorker):
     empty_queue_sleep_time: Union(int, float) = 0.1
     max_tasks_per_iteration: int = 100
 
-    def __init__(self, task_courier: AbstractWorkerTaskCourier, **kwargs):
+    def __init__(self, task_courier, **kwargs):
         self.task_courier = task_courier
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    def wait_for_tasks(self) -> List(Tuple):
+    def wait_for_tasks(self) -> List(Task):
         """
         Waits for tasks in the queue, pops and returns them. The count of
         tasks depends on the self.max_tasks_per_iteration argument:
@@ -51,25 +52,21 @@ class BaseWorker(AbstractWorker):
                 return tasks
             time.sleep(self.empty_queue_sleep_time)
 
-    def perform_tasks(self, tasks: List(Tuple)) -> List(Tuple):
+    def perform_tasks(self, tasks: List(Task)) -> List(Task):
         """
-        Abstract method for processing tasks. Should return a list of tasks:
-        [(task_id, task_result), (task_id, task_result), ...]
+        Abstract class for processing tasks.
         """
         raise NotImplementedError
 
-    def return_task_results(self, tasks: List(Tuple)) -> None:
+    def return_task_results(self, tasks: List(Task), *args, **kwargs) -> None:
         """
-        Method method for returning task results to the clients.
+        Abstract class for returning task results.
         """
-        if self.needs_result_returning:
-            for task_id, task_result in tasks:
-                self.task_courier.return_task_result(
-                    queue_name=self.queue_name,
-                    task_id=task_id,
-                    task_result=task_result)
+        for task in tasks:
+            if task.needs_result_returning:
+                self.task_courier.return_task_result(task=task)
 
-    def perform(self, total_iterations: int) -> None:
+    def perform(self, total_iterations: int, *args, **kwargs) -> None:
         """
         The main method that starts the task worker.
         Takes a task from the queue, calls the "perform_task method",
