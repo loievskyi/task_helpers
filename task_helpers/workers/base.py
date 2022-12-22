@@ -24,6 +24,8 @@ class BaseWorker(AbstractWorker):
     - max_tasks_per_iteration - How many tasks can be processed in 1 iteration
       (in the perform_many_tasks method). Influences how many maximum tasks
       will be popped from the queue.
+    - needs_result_returning - True if needs to return the result of the
+      task performing, or False otherwise.
     """
 
     task_courier: AbstractWorkerTaskCourier = None
@@ -31,6 +33,7 @@ class BaseWorker(AbstractWorker):
     after_iteration_sleep_time: Union(int, float) = 0.001
     empty_queue_sleep_time: Union(int, float) = 0.1
     max_tasks_per_iteration: int = 100
+    needs_result_returning: bool = True
 
     def __init__(self, task_courier: AbstractWorkerTaskCourier, **kwargs):
         self.task_courier = task_courier
