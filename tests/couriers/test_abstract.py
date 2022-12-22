@@ -72,11 +72,13 @@ class AbstractWorkerTaskCourierTestCase(unittest.TestCase):
                 task_result="task_result")
 
 
-class AbstractClientWorkerTaskCourierTestCase(AbstractClientTaskCourierTestCase,
-                                          AbstractWorkerTaskCourierTestCase,
-                                          unittest.TestCase):
+class AbstractClientWorkerTaskCourierTestCase(
+        AbstractClientTaskCourierTestCase,
+        AbstractWorkerTaskCourierTestCase,
+        unittest.TestCase):
     """
-    Tests to make sure that AbstractClientWorkerTaskCourier is working correctly.
+    Tests to make sure that AbstractClientWorkerTaskCourier
+    is working correctly.
     """
 
     def setUp(self):
