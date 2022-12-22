@@ -1,10 +1,12 @@
 import time
 import logging
+from typing import List, Union, Tuple
 
-from task_helpers import exceptions
+from task_helpers.couriers.abstract import AbstractWorkerTaskCourier
+from task_helpers.workers.abstract import AbstractWorker
 
 
-class BaseWorker:
+class BaseWorker(AbstractWorker):
     """
     Base class for workers.
     Initialization requires an instance of task_courier.
@@ -14,50 +16,73 @@ class BaseWorker:
     Class fields:
     - task_courier - an instance of the task_courier.
       Specified when the class is initialized.
-    - queue_name - The name of the queue from which tasks are read.
+    - queue_name - The name of the queue from which tasks will be performed.
     - after_iteration_sleep_time - Downtime in seconds after each task is
       completed (e.g. 0.1). Default is 1 millisecond.
-    - return_task_result - True if needs to return the result of the
-      task execution, or False otherwise.
+    - empty_queue_sleep_time - downtime in seconds if the task queue is empty.
+      Default is 0.1 seconds.
+    - max_tasks_per_iteration - How many tasks can be processed in 1 iteration
+      (in the perform_many_tasks method). Influences how many maximum tasks
+      will be popped from the queue.
     """
 
-    task_courier = None
-    queue_name = None
-    after_iteration_sleep_time = 0.001
-    return_task_result = True
+    task_courier: AbstractWorkerTaskCourier = None
+    queue_name: str = None
+    after_iteration_sleep_time: Union(int, float) = 0.001
+    empty_queue_sleep_time: Union(int, float) = 0.1
+    max_tasks_per_iteration: int = 100
 
-    def __init__(self, task_courier, **kwargs):
+    def __init__(self, task_courier: AbstractWorkerTaskCourier, **kwargs):
         self.task_courier = task_courier
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    def perform_task(self, task):
+    def wait_for_tasks(self) -> List(Tuple):
         """
-        Task processing class. Must be overridden in the inherited class.
+        Waits for tasks in the queue, pops and returns them. The count of
+        tasks depends on the self.max_tasks_per_iteration argument:
+        Count of tasks = min(len_queue, self.max_tasks_per_iteration).
+        """
+        while True:
+            tasks = self.task_courier.get_tasks(
+                queue_name=self.queue_name,
+                max_count=self.max_tasks_per_iteration)
+            if tasks:
+                return tasks
+            time.sleep(self.empty_queue_sleep_time)
+
+    def perform_tasks(self, tasks: List(Tuple)) -> List(Tuple):
+        """
+        Abstract method for processing tasks. Should return a list of tasks:
+        [(task_id, task_result), (task_id, task_result), ...]
         """
         raise NotImplementedError
 
-    def perform(self, total_tasks):
+    def return_task_results(self, tasks: List(Tuple)) -> None:
+        """
+        Method method for returning task results to the clients.
+        """
+        if self.needs_result_returning:
+            for task_id, task_result in tasks:
+                self.task_courier.return_task_result(
+                    queue_name=self.queue_name,
+                    task_id=task_id,
+                    task_result=task_result)
+
+    def perform(self, total_iterations: int) -> None:
         """
         The main method that starts the task worker.
         Takes a task from the queue, calls the "perform_task method",
         and returns the result if "return_task_result" field is True.
 
-        - total_tasks - how many tasks should the worker perform.
+        - total_iterations - how many iterations should the worker perform.
         """
-        for num_task in range(total_tasks):
-            task = self.task_courier.wait_for_task(queue_name=self.queue_name)
+        for num_task in range(total_iterations):
+            tasks = self.wait_for_tasks()
             try:
-                task_result = self.perform_task(task)
+                tasks = self.perform_tasks(tasks=tasks)
             except Exception as ex:
-                logging.error(f"An error has occured on "
-                              f"Worker.perform.perform_task: {ex}")
-                task_result = exceptions.PerformTaskError(exception=ex)
-
-            if self.return_task_result:
-                self.task_courier.return_task_result(
-                    queue_name=self.queue_name,
-                    task_id=task[0],
-                    task_result=task_result)
+                logging.error(f"An error has occured on Worker.perform: {ex}")
+            self.return_task_result(tasks=tasks)
 
             time.sleep(self.after_iteration_sleep_time)
