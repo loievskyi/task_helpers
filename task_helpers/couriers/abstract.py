@@ -1,6 +1,6 @@
-class BaseClientTaskCourier(object):
+class AbstractClientTaskCourier(object):
     """
-    Base class for the client side of task helpers.
+    Abstract class for the client side of task helpers.
 
     The inherited class should provide the ability to:
     Client side methods:
@@ -35,9 +35,9 @@ class BaseClientTaskCourier(object):
         raise NotImplementedError
 
 
-class BaseWorkerTaskCourier(object):
+class AbstractWorkerTaskCourier(object):
     """
-    Base class for the worker side of task helpers.
+    Abstract class for the worker side of task helpers.
 
     The inherited class should provide the ability to:
     Worker side methods:
@@ -72,10 +72,10 @@ class BaseWorkerTaskCourier(object):
         raise NotImplementedError
 
 
-class BaseClientWorkerTaskCourier(
-        BaseWorkerTaskCourier, BaseClientTaskCourier):
+class AbstractClientWorkerTaskCourier(
+        AbstractWorkerTaskCourier, AbstractClientTaskCourier):
     """
-    Base class for the client and worker sides of task helpers.
+    Abstract class for the client and worker sides of task helpers.
     The inherited class should provide the ability to:
 
     Client side methods:

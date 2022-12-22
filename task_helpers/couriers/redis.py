@@ -3,10 +3,10 @@ import pickle
 import datetime
 import time
 
-from .base import (
-    BaseClientTaskCourier,
-    BaseWorkerTaskCourier,
-    BaseClientWorkerTaskCourier
+from .abstract import (
+    AbstractClientTaskCourier,
+    AbstractWorkerTaskCourier,
+    AbstractClientWorkerTaskCourier
 )
 from .. import exceptions
 
@@ -36,7 +36,7 @@ class FullQueueNameMixin:
         return full_queue_name
 
 
-class RedisClientTaskCourier(FullQueueNameMixin, BaseClientTaskCourier):
+class RedisClientTaskCourier(FullQueueNameMixin, AbstractClientTaskCourier):
     """
     Class for the client side of task helpers using redis.
 
@@ -130,7 +130,7 @@ class RedisClientTaskCourier(FullQueueNameMixin, BaseClientTaskCourier):
         return self.redis_connection.exists(name)
 
 
-class RedisWorkerTaskCourier(FullQueueNameMixin, BaseWorkerTaskCourier):
+class RedisWorkerTaskCourier(FullQueueNameMixin, AbstractWorkerTaskCourier):
     """
     Class for the worker side of task helpers using redis.
 
@@ -217,7 +217,7 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, BaseWorkerTaskCourier):
 class RedisClientWorkerTaskCourier(
         RedisClientTaskCourier,
         RedisWorkerTaskCourier,
-        BaseClientWorkerTaskCourier):
+        AbstractClientWorkerTaskCourier):
     """
     Class for the client and worker sides of task helpers, works via redis.
 
