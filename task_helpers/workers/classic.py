@@ -17,7 +17,9 @@ class ClassicWorker(BaseWorker):
       task execution, or False otherwise.
     """
 
-    def perform_task(self, task):
+    max_tasks_per_iteration = 1
+
+    def perform_tasks(self, tasks):
         """
         task is a tuple: (task_id, task_data).
         task_data is a dictionary with keys "function", "args" and "kwargs".
@@ -25,8 +27,13 @@ class ClassicWorker(BaseWorker):
         and returns the execution result. Arguments "args" and "kwargs" are
         optional.
         """
-        task_id, task_data = task
-        function = task_data["function"]
-        function_args = task_data.get("args", tuple())
-        function_kwargs = task_data.get("kwargs", dict())
-        return function(*function_args, **function_kwargs)
+        results = []
+        for task in tasks:
+            task_id, task_data = task
+            function = task_data["function"]
+            function_args = task_data.get("args", tuple())
+            function_kwargs = task_data.get("kwargs", dict())
+            task_result = function(*function_args, **function_kwargs)
+            results.append((task_id, task_result))
+
+        return results
