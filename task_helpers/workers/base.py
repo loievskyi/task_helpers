@@ -2,6 +2,7 @@ import time
 import logging
 
 from task_helpers.workers.abstract import AbstractWorker
+from task_helpers.couriers.abstract import AbstractWorkerTaskCourier
 
 
 class BaseWorker(AbstractWorker):
@@ -26,14 +27,14 @@ class BaseWorker(AbstractWorker):
       task performing, or False otherwise.
     """
 
-    task_courier = None
+    task_courier: AbstractWorkerTaskCourier = None
     queue_name = None
     after_iteration_sleep_time = 0.001
     empty_queue_sleep_time = 0.1
     max_tasks_per_iteration = 100
     needs_result_returning = True
 
-    def __init__(self, task_courier, **kwargs):
+    def __init__(self, task_courier: AbstractWorkerTaskCourier, **kwargs):
         self.task_courier = task_courier
         for key, value in kwargs.items():
             setattr(self, key, value)
