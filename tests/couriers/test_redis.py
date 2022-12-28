@@ -158,9 +158,11 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
                 task_id=task_id)
 
     def test_get_task_result_if_result_is_PerformTaskError(self):
-        before_task_result = exceptions.PerformTaskError(
-            exception=Exception(), error_data="ERROR TEXT")
         before_task_id = uuid.uuid1()
+        before_task_result = exceptions.PerformTaskError(
+            task=(before_task_id, "test_data"),
+            exception=Exception(),
+            error_data="ERROR TEXT")
         key_name = self.task_courier._get_full_queue_name(
             queue_name="test_queue_name",
             sufix="results:") + str(before_task_id)
@@ -173,6 +175,8 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         self.assertEqual(type(result), exceptions.PerformTaskError)
         self.assertEqual(type(result.exception), Exception)
         self.assertEqual(result.error_data, "ERROR TEXT")
+        self.assertEqual(result.task[0], before_task_id)
+        self.assertEqual(result.task[1], "test_data")
 
     def test_wait_for_task_result_if_delete_data_True(self):
         before_task_result = "test_result_123"
@@ -283,9 +287,10 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         self.assertEqual(after_task_result, before_task_result)
 
     def test_check_for_done_if_done_with_error(self):
-        before_task_result = exceptions.PerformTaskError(
-            exception=Exception())
         before_task_id = uuid.uuid1()
+        before_task_result = exceptions.PerformTaskError(
+            task=(before_task_id, "test_data"),
+            exception=Exception())
         key_name = self.task_courier._get_full_queue_name(
             queue_name="test_queue_name",
             sufix="results:") + str(before_task_id)
@@ -299,6 +304,30 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
             task_id=before_task_id)
         self.assertEqual(done_status, True)
         self.assertEqual(type(result), exceptions.PerformTaskError)
+        self.assertEqual(result.task[0], before_task_id)
+        self.assertEqual(result.task[1], "test_data")
+
+    class ClassWithRequiredInitArgs:
+        def __init__(self, arg1, *, kwarg1):
+            self.arg1 = arg1
+            self.kwarg1 = kwarg1
+
+    def test_result_as_class_with_required_init_args(self):
+        before_task_id = uuid.uuid1()
+        before_task_result = self.ClassWithRequiredInitArgs("1", kwarg1="text")
+        key_name = self.task_courier._get_full_queue_name(
+            queue_name="test_queue_name",
+            sufix="results:") + str(before_task_id)
+        value = pickle.dumps(before_task_result)
+        self.redis_connection.set(name=key_name, value=value)
+
+        result = self.task_courier.get_task_result(
+            queue_name="test_queue_name",
+            task_id=before_task_id)
+
+        self.assertEqual(type(result), self.ClassWithRequiredInitArgs)
+        self.assertEqual(result.arg1, "1")
+        self.assertEqual(result.kwarg1, "text")
 
 
 class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):

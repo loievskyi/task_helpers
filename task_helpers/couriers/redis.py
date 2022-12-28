@@ -58,7 +58,7 @@ class RedisClientTaskCourier(FullQueueNameMixin, AbstractClientTaskCourier):
     def get_task_result(self, queue_name, task_id, delete_data=True):
         """Returns task retult, if it exists.
         Otherwise, raises exceptions.TaskResultDoesNotExist. If an error occurs
-        during the execution of the task raises exceptions.PerformTaskError.
+        during the execution of the task returns exceptions.PerformTaskError.
         Client side method.
 
         - queue_name - queue name, used in the add_task_to_queue method.
