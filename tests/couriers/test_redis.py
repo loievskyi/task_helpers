@@ -267,7 +267,7 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         done_status = self.task_courier.check_for_done(
             queue_name="test_queue_name",
             task_id=before_task_id)
-        self.assertEqual(done_status, False)
+        self.assertFalse(done_status)
 
     def test_check_for_done_if_done_successfully(self):
         before_task_result = "test_result_123"
@@ -283,7 +283,7 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         after_task_result = self.task_courier.get_task_result(
             queue_name="test_queue_name",
             task_id=before_task_id)
-        self.assertEqual(done_status, True)
+        self.assertTrue(done_status)
         self.assertEqual(after_task_result, before_task_result)
 
     def test_check_for_done_if_done_with_error(self):
@@ -302,7 +302,7 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         result = self.task_courier.get_task_result(
             queue_name="test_queue_name",
             task_id=before_task_id)
-        self.assertEqual(done_status, True)
+        self.assertTrue(done_status)
         self.assertEqual(type(result), exceptions.PerformTaskError)
         self.assertEqual(result.task[0], before_task_id)
         self.assertEqual(result.task[1], "test_data")
