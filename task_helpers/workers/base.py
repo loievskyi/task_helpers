@@ -3,6 +3,7 @@ import logging
 
 from task_helpers.workers.abstract import AbstractWorker
 from task_helpers.couriers.abstract import AbstractWorkerTaskCourier
+from task_helpers import exceptions
 
 
 class BaseWorker(AbstractWorker):
@@ -75,16 +76,22 @@ class BaseWorker(AbstractWorker):
         """
         The main method that starts the task worker.
         Takes a task from the queue, calls the "perform_task method",
-        and returns the result if "return_task_result" field is True.
+        and returns the result if "needs_result_returning" field is True.
 
         - total_iterations - how many iterations should the worker perform.
         """
         for num_task in range(total_iterations):
-            tasks = self.wait_for_tasks()
+            input_tasks = self.wait_for_tasks()
             try:
-                tasks = self.perform_tasks(tasks=tasks)
+                output_tasks = self.perform_tasks(tasks=input_tasks)
             except Exception as ex:
                 logging.error(f"An error has occured on Worker.perform: {ex}")
-            self.return_task_result(tasks=tasks)
+                output_tasks = list()
+                for task in input_tasks:
+                    task_id = task[0]
+                    task_result_data = exceptions.PerformTaskError(
+                        task=task, exception=ex)
+                    output_tasks.append((task_id, task_result_data))
 
+            self.return_task_results(tasks=output_tasks)
             time.sleep(self.after_iteration_sleep_time)
