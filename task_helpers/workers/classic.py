@@ -21,6 +21,7 @@ class ClassicWorker(BaseWorker):
 
     def perform_tasks(self, tasks):
         """
+        Method for processing tasks. Returns a list of tasks.
         task is a tuple: (task_id, task_data).
         task_data is a dictionary with keys "function", "args" and "kwargs".
         Calls a function with args "args" and kwargs "kwargs", unpacking them,
