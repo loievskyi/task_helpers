@@ -30,6 +30,10 @@ class ClassicWorker(BaseWorker):
         results = []
         for task in tasks:
             task_id, task_data = task
+            assert isinstance(task_data, dict), \
+                "task_data must be a dict instance."
+            assert "function" in task_data.keys(), \
+                "task_data must have a \"function\" key."
             function = task_data["function"]
             function_args = task_data.get("args", tuple())
             function_kwargs = task_data.get("kwargs", dict())
