@@ -3,8 +3,75 @@ The package allows you to work with tasks.
 The idea is that it would be possible to create a task and send it for execution / processing somewhere (to the worker), without waiting for the result to be executed in the same block of code.
 Or, for example, different clients (from different threads) can send many tasks for processing and each wait for its own result.
 
-### SOLID
-An abstract class describes the methods that derived classes must have. The input and output data types are also described.
+## Usage example
+### Client side:
+```python3
+import redis
+
+from task_helpers.couriers.redis import RedisClientTaskCourier
+
+task_courier = RedisClientTaskCourier(redis_connection=redis.Redis())
+QUEUE_NAME = "bulk_data_saving"
+
+
+def to_save(task_data):
+    # add a task to the queue
+    task_id = task_courier.add_task_to_queue(
+        queue_name=QUEUE_NAME,
+        task_data=task_data)
+
+    # waiting for the task to complete in the worker.
+    saved_object = task_courier.wait_for_task_result(
+        queue_name=QUEUE_NAME,
+        task_id=task_id)
+    return saved_object
+
+
+if __name__ == "__main__":
+    # Many clients send data
+    task_data = {
+        "id": "123",
+        "name": "tomato",
+        "price": "12.45"
+    }
+    saved_object = to_save(task_data=task_data)
+    print(saved_object)
+    # {'name': 'tomato', 'price': '12.45', 'id': '123')}
+
+```
+
+### Worker side:
+```python3
+import redis
+
+from task_helpers.couriers.redis import RedisWorkerTaskCourier
+from task_helpers.workers.base import BaseWorker
+
+task_courier = RedisWorkerTaskCourier(redis_connection=redis.Redis())
+QUEUE_NAME = "bulk_data_saving"
+
+
+class BulkSaveWorker(BaseWorker):
+    queue_name = QUEUE_NAME
+
+    def perform_tasks(self, tasks):
+        data_dicts = [task_data for task_id, task_data in tasks]
+
+        # bulk saving data_dicts (it's faster than saving 1 at a time.)
+        print(f"saved {len(data_dicts)} objects: \n{data_dicts}")
+        # saved 1 objects:
+        # [{'id': '123', 'name': 'tomato', 'price': '12.45'}]
+
+        return tasks
+
+
+if __name__ == "__main__":
+    worker = BulkSaveWorker(task_courier=task_courier)
+    worker.perform(total_iterations=500)
+    # the worker will complete its work after 500 iterations
+    # (in the future functionality it is necessary to prevent memory leaks)
+
+```
 
 ## The couriers module
 the couriers module is responsible for sending tasks from the worker to the client and back, as well as checking the execution status.
