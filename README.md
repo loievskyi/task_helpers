@@ -73,6 +73,11 @@ if __name__ == "__main__":
 
 ```
 
+## Installation
+```bash
+pip install task_helpers
+```
+
 ## The couriers module
 the couriers module is responsible for sending tasks from the worker to the client and back, as well as checking the execution status.
 
