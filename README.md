@@ -15,7 +15,7 @@ QUEUE_NAME = "bulk_data_saving"
 
 
 def to_save(task_data):
-    # add a task to the queue
+    # Adding a task to the queue.
     task_id = task_courier.add_task_to_queue(
         queue_name=QUEUE_NAME,
         task_data=task_data)
@@ -28,20 +28,20 @@ def to_save(task_data):
 
 
 if __name__ == "__main__":
-    # Many clients send data
+    # Many clients can add tasks to the queue at the same time.
     task_data = {
-        "id": "123",
         "name": "tomato",
         "price": "12.45"
     }
     saved_object = to_save(task_data=task_data)
     print(saved_object)
-    # {'name': 'tomato', 'price': '12.45', 'id': '123')}
+    # {'name': 'tomato', 'price': '12.45', 'id': UUID('...'))}
 
 ```
 
 ### Worker side:
 ```python3
+import uuid
 import redis
 
 from task_helpers.couriers.redis import RedisWorkerTaskCourier
@@ -54,13 +54,17 @@ QUEUE_NAME = "bulk_data_saving"
 class BulkSaveWorker(BaseWorker):
     queue_name = QUEUE_NAME
 
-    def perform_tasks(self, tasks):
-        data_dicts = [task_data for task_id, task_data in tasks]
+    def bulk_saving_plug(self, tasks):
+        for task_id, task_data in tasks:
+            task_data["id"] = uuid.uuid4()
+        return tasks
 
-        # bulk saving data_dicts (it's faster than saving 1 at a time.)
-        print(f"saved {len(data_dicts)} objects: \n{data_dicts}")
-        # saved 1 objects:
-        # [{'id': '123', 'name': 'tomato', 'price': '12.45'}]
+    def perform_tasks(self, tasks):
+        self.bulk_saving_plug(tasks)
+        # Bulk saving data_dicts (it's faster than saving 1 at a time.)
+
+        print(f"saved {len(tasks)} objects.")
+        # saved 1 objects.
 
         return tasks
 
