@@ -4,6 +4,11 @@ The idea is that it would be possible to create a task and send it for execution
 Or, for example, different clients (from different threads) can send many tasks for processing and each wait for its own result.
 
 ## Usage example
+```bash
+# Run redis (This can be done in many ways, not necessarily through docker):
+docker run -p 6379:6379 redis
+```
+
 ### Client side:
 ```python3
 import redis
@@ -35,7 +40,7 @@ if __name__ == "__main__":
     }
     saved_object = to_save(task_data=task_data)
     print(saved_object)
-    # {'name': 'tomato', 'price': '12.45', 'id': UUID('...'))}
+    # {'name': 'tomato', 'price': '12.45', 'id': UUID('...'), 'status': 'active')}
 
 ```
 
@@ -57,10 +62,11 @@ class BulkSaveWorker(BaseWorker):
     def bulk_saving_plug(self, tasks):
         for task_id, task_data in tasks:
             task_data["id"] = uuid.uuid4()
+            task_data["status"] = "active"
         return tasks
 
     def perform_tasks(self, tasks):
-        self.bulk_saving_plug(tasks)
+        tasks = self.bulk_saving_plug(tasks)
         # Bulk saving data_dicts (it's faster than saving 1 at a time.)
 
         print(f"saved {len(tasks)} objects.")
