@@ -44,6 +44,8 @@ class RedisClientTaskCourier(FullQueueNameMixin, AbstractClientTaskCourier):
         - get_task_result - returns task retuls, if it exists.
         - wait_for_task_result - Waits for the task result to appear.
         - add_task_to_queue - adds a task to the redis queue for processing.
+        - bulk_add_tasks_to_queue - adds many tasks to the redis queue for
+          processing.
         - check_for_done - Checks if the task has completed.
     """
 
@@ -122,6 +124,27 @@ class RedisClientTaskCourier(FullQueueNameMixin, AbstractClientTaskCourier):
             self._get_full_queue_name(queue_name=queue_name, sufix="pending"),
             task)
         return task_id
+
+    def bulk_add_tasks_to_queue(self, queue_name, tasks_data):
+        """Adds many tasks to the redis queue for processing.
+        Returns list of task_ids.
+        Client side method.
+
+        - queue_name - queue name, used in the add_task_to_queue method.
+        - tasks_data - task objects, what will be added to redis qeueue."""
+
+        tasks = list()
+        task_ids = list()
+        for task_data in tasks_data:
+            task_id = self._generate_task_id()
+            task = pickle.dumps((task_id, task_data))
+            task_ids.append(task_id)
+            tasks.append(task)
+
+        self.redis_connection.rpush(
+            self._get_full_queue_name(queue_name=queue_name, sufix="pending"),
+            *tasks)
+        return task_ids
 
     def check_for_done(self, queue_name, task_id):
         """Checks if the task has completed.
@@ -227,6 +250,8 @@ class RedisClientWorkerTaskCourier(
         - get_task_result - returns task retuls, if it exists.
         - wait_for_task_result - Waits for the task result to appear.
         - add_task_to_queue - adds a task to the redis queue for processing.
+        - bulk_add_tasks_to_queue - adds many tasks to the redis queue for
+          processing.
         - check_for_done - Checks if the task has completed.
 
     Worker side methods:

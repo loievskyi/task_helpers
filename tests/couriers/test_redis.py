@@ -116,6 +116,66 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         self.assertEqual(start_task_data, task_data)
         self.assertEqual(task_data("123"), "123123")
 
+    def test_add_task_to_queue_is_FIFO(self):
+        task = self.redis_connection.lpop(
+            self.task_courier._get_full_queue_name(
+                queue_name="test_queue_name", sufix="pending")
+        )
+        self.assertIsNone(task)  # queue is empty
+
+        start_task_ids = [
+            self.task_courier.add_task_to_queue(
+                queue_name="test_queue_name",
+                task_data=num) for num in range(100)
+        ]
+
+        for num in range(100):
+            task = self.redis_connection.lpop(
+                self.task_courier._get_full_queue_name(
+                    queue_name="test_queue_name", sufix="pending")
+            )
+            self.assertIsNotNone(task)
+            task_id, task_data = pickle.loads(task)
+
+            self.assertEqual(num, task_data)
+            self.assertEqual(start_task_ids[num], task_id)
+
+        task = self.redis_connection.lpop(
+            self.task_courier._get_full_queue_name(
+                queue_name="test_queue_name", sufix="pending")
+        )
+        self.assertIsNone(task)  # queue is empty
+
+    def test_bulk_add_tasks_to_queue_is_FIFO(self):
+        task = self.redis_connection.lpop(
+            self.task_courier._get_full_queue_name(
+                queue_name="test_queue_name", sufix="pending")
+        )
+        self.assertIsNone(task)  # queue is empty
+
+        start_tasks_data = [num for num in range(100)]
+        start_task_ids = self.task_courier.bulk_add_tasks_to_queue(
+            queue_name="test_queue_name",
+            tasks_data=start_tasks_data)
+
+        for num in range(100):
+            task = self.redis_connection.lpop(
+                self.task_courier._get_full_queue_name(
+                    queue_name="test_queue_name", sufix="pending")
+            )
+            self.assertIsNotNone(task)
+            task_id, task_data = pickle.loads(task)
+
+            self.assertEqual(num, task_data)
+            self.assertEqual(start_task_ids[num], task_id)
+            self.assertEqual(start_tasks_data[num], task_data)
+
+        task = self.redis_connection.lpop(
+            self.task_courier._get_full_queue_name(
+                queue_name="test_queue_name", sufix="pending")
+        )
+        self.assertIsNone(task)  # queue is empty
+
     def test_get_task_result_if_delete_data_True(self):
         before_task_result = "test_result_123"
         before_task_id = uuid.uuid1()

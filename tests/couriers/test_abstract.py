@@ -34,6 +34,12 @@ class AbstractClientTaskCourierTestCase(unittest.TestCase):
                 queue_name="queue_name",
                 task_data="task_data")
 
+    def test_bulk_add_tasks_to_queue(self):
+        with self.assertRaises(expected_exception=NotImplementedError):
+            self.task_courier.bulk_add_tasks_to_queue(
+                queue_name="queue_name",
+                tasks_data=["task_data"])
+
     def test_check_for_done(self):
         with self.assertRaises(expected_exception=NotImplementedError):
             self.task_courier.check_for_done(

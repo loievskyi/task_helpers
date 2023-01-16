@@ -10,6 +10,8 @@ class AbstractClientTaskCourier(object):
         - get_task_result - returns task retuls, if it exists.
         - wait_for_task_result - Waits for the task result to appear.
         - add_task_to_queue - adds a task to the queue for processing.
+        - bulk_add_tasks_to_queue - adds many tasks to the queue for
+          processing.
         - check_for_done - Checks if the task has completed.
     """
 
@@ -28,6 +30,12 @@ class AbstractClientTaskCourier(object):
 
     def add_task_to_queue(self, queue_name, task_data) -> object:
         """Put the task in the queue for processing. Returns task_id
+        Client side method."""
+        raise NotImplementedError
+
+    def bulk_add_tasks_to_queue(self, queue_name, tasks_data) -> List:
+        """Adds many tasks to the queue for processing.
+        Returns list of task_ids.
         Client side method."""
         raise NotImplementedError
 
@@ -86,6 +94,8 @@ class AbstractClientWorkerTaskCourier(
         - get_task_result - returns task retuls, if it exists.
         - wait_for_task_result - Waits for the task result to appear.
         - add_task_to_queue - adds a task to the queue for processing.
+        - bulk_add_tasks_to_queue - adds many tasks to the queue for
+          processing.
         - check_for_done - Checks if the task has completed.
 
     Worker side methods:
