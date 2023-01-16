@@ -73,8 +73,12 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
                          self.task_courier.redis_connection)
 
     def test__generate_task_id(self):
+        self.assertFalse(hasattr(self.task_courier, "_uuid1_is_safe"))
         task_id = self.task_courier._generate_task_id()
-        self.assertEqual(type(task_id), uuid.UUID)
+        self.assertTrue(hasattr(self.task_courier, "_uuid1_is_safe"))
+        uuid1_is_safe = uuid.uuid1().is_safe is uuid.SafeUUID.safe
+        expected_version = 1 if uuid1_is_safe else 4
+        self.assertEqual(expected_version, task_id.version)
 
     def test_add_task_to_queue_as_dict(self):
         start_task_data = {

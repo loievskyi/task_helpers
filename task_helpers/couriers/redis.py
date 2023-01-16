@@ -53,7 +53,9 @@ class RedisClientTaskCourier(FullQueueNameMixin, AbstractClientTaskCourier):
         self.redis_connection = redis_connection
 
     def _generate_task_id(self):
-        return uuid.uuid1()
+        if not hasattr(self, "_uuid1_is_safe"):
+            self._uuid1_is_safe = uuid.uuid1().is_safe is uuid.SafeUUID.safe
+        return uuid.uuid1() if self._uuid1_is_safe else uuid.uuid4()
 
     def get_task_result(self, queue_name, task_id, delete_data=True):
         """Returns task retult, if it exists.
