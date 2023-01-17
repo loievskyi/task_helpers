@@ -160,7 +160,7 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, AbstractWorkerTaskCourier):
     Class for the worker side of task helpers using redis.
 
     Worker side methods:
-        - get_tasks - pops tasks from queue and returns it.
+        - bulk_get_tasks - pops tasks from queue and returns it.
         - get_task - returns one task from redis queue.
         - wait_for_task - waits for task and returns it.
         - return_task_result - returns result to the client side via redis.
@@ -173,7 +173,7 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, AbstractWorkerTaskCourier):
     def __init__(self, redis_connection):
         self.redis_connection = redis_connection
 
-    def get_tasks(self, queue_name, max_count):
+    def bulk_get_tasks(self, queue_name, max_count):
         """Pops tasks from queue and returns it. The number of task which
         depends on max_count and the number of elements in the queue.
         Worker side method.
@@ -273,7 +273,7 @@ class RedisClientWorkerTaskCourier(
         - check_for_done - Checks if the task has completed.
 
     Worker side methods:
-        - get_tasks - pops tasks from queue and returns it.
+        - bulk_get_tasks - pops tasks from queue and returns it.
         - get_task - returns one task from redis queue.
         - wait_for_task - waits for task and returns it.
         - return_task_result - returns result to the client side via redis.

@@ -583,16 +583,16 @@ class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
             self.assertEqual(before_task_id, after_task_id)
             self.assertEqual(before_task_data, after_task_data)
 
-    def test_get_tasks(self):
+    def test_bulk_get_tasks(self):
         queue_name = "test_queue_name"
         before_task_id = uuid.uuid1()
-        before_task_data = "test_get_tasks_data"
+        before_task_data = "test_bulk_get_tasks_data"
         task = pickle.dumps((before_task_id, before_task_data))
 
         self.redis_connection.rpush(
             self.task_courier._get_full_queue_name(
                 queue_name=queue_name, sufix="pending"), task)
-        tasks = self.task_courier.get_tasks(
+        tasks = self.task_courier.bulk_get_tasks(
             queue_name=queue_name, max_count=20)
         after_task_id, after_task_data = tasks[0]
 
@@ -601,20 +601,20 @@ class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         self.assertEqual(before_task_id, after_task_id)
         self.assertEqual(before_task_data, after_task_data)
 
-    def test_get_tasks_if_no_tasks(self):
+    def test_bulk_get_tasks_if_no_tasks(self):
         queue_name = "test_queue_name"
-        tasks = self.task_courier.get_tasks(
+        tasks = self.task_courier.bulk_get_tasks(
             queue_name=queue_name, max_count=20)
         self.assertEqual(type(tasks), list)
         self.assertEqual(len(tasks), 0)
 
-    def test_get_tasks_if_many_tasks_and_FIFO(self):
+    def test_bulk_get_tasks_if_many_tasks_and_FIFO(self):
         queue_name = "test_queue_name"
         before_tasks = list()
 
         for num in range(50):
             task_id = uuid.uuid1()
-            task_data = f"test_get_tasks_data_{num}"
+            task_data = f"test_bulk_get_tasks_data_{num}"
             task = (task_id, task_data)
             before_tasks.append(task)
             task = pickle.dumps(task)
@@ -622,7 +622,7 @@ class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
                 self.task_courier._get_full_queue_name(
                     queue_name=queue_name, sufix="pending"), task)
 
-        after_tasks = self.task_courier.get_tasks(
+        after_tasks = self.task_courier.bulk_get_tasks(
             queue_name=queue_name, max_count=20)
 
         self.assertEqual(type(after_tasks), list)

@@ -47,7 +47,7 @@ class BaseWorker(AbstractWorker):
         Count of tasks = min(len_queue, self.max_tasks_per_iteration).
         """
         while True:
-            tasks = self.task_courier.get_tasks(
+            tasks = self.task_courier.bulk_get_tasks(
                 queue_name=self.queue_name,
                 max_count=self.max_tasks_per_iteration)
             if tasks:

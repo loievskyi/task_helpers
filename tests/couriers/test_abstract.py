@@ -55,9 +55,9 @@ class AbstractWorkerTaskCourierTestCase(unittest.TestCase):
     def setUp(self):
         self.task_courier = AbstractWorkerTaskCourier()
 
-    def test_get_tasks(self):
+    def test_bulk_get_tasks(self):
         with self.assertRaises(expected_exception=NotImplementedError):
-            self.task_courier.get_tasks(
+            self.task_courier.bulk_get_tasks(
                 queue_name="queue_name",
                 max_count=100,
             )

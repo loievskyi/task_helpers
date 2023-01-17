@@ -52,7 +52,7 @@ class AbstractWorkerTaskCourier(object):
 
     The inherited class should provide the ability to:
     Worker side methods:
-        - get_tasks - pops tasks from queue and returns it.
+        - bulk_get_tasks - pops tasks from queue and returns it.
         - get_task - returns one task from queue.
         - wait_for_task - waits for task and returns it.
         - return_task_result - returns result to the client side.
@@ -60,7 +60,7 @@ class AbstractWorkerTaskCourier(object):
           tasks to the client.
     """
 
-    def get_tasks(self, queue_name, max_count) -> List[Tuple]:
+    def bulk_get_tasks(self, queue_name, max_count) -> List[Tuple]:
         """Pops tasks from queue and returns it. The number of task which
         depends on max_count and the number of elements in the queue. Tasks are
         [(task_id, task_data), (task_id, task_data), ...]
@@ -106,7 +106,7 @@ class AbstractClientWorkerTaskCourier(
         - check_for_done - Checks if the task has completed.
 
     Worker side methods:
-        - get_tasks - pops tasks from queue and returns it.
+        - bulk_get_tasks - pops tasks from queue and returns it.
         - get_task - returns one task from queue.
         - wait_for_task - waits for task and returns it.
         - return_task_result - returns result to the client side.
