@@ -164,6 +164,8 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, AbstractWorkerTaskCourier):
         - get_task - returns one task from redis queue.
         - wait_for_task - waits for task and returns it.
         - return_task_result - returns result to the client side via redis.
+        - bulk_return_task_results - returns the result of processing many
+          tasks to the client.
     """
 
     result_timeout = 600  # Set None to keep task_result permanently.
@@ -238,6 +240,22 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, AbstractWorkerTaskCourier):
         self.redis_connection.set(name=name, value=value,
                                   ex=self.result_timeout)
 
+    def bulk_return_task_results(self, queue_name, task_results):
+        """Return the result of processing many tasks to the client via redis.
+        Worker side method.
+
+        - queue_name - queue name, used in the add_task_to_queue method.
+        - task_results - a dictionary where keys are task_ids and values are
+          task_results."""
+
+        pipeline = self.redis_connection.pipeline()
+        for task_id, result in task_results.items():
+            name = self._get_full_queue_name(
+                queue_name=queue_name, sufix="results:") + str(task_id)
+            value = pickle.dumps(result)
+            pipeline.set(name=name, value=value, ex=self.result_timeout)
+        pipeline.execute()
+
 
 class RedisClientWorkerTaskCourier(
         RedisClientTaskCourier,
@@ -259,5 +277,7 @@ class RedisClientWorkerTaskCourier(
         - get_task - returns one task from redis queue.
         - wait_for_task - waits for task and returns it.
         - return_task_result - returns result to the client side via redis.
+        - bulk_return_task_results - returns the result of processing many
+          tasks to the client.
     """
     pass

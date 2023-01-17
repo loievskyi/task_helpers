@@ -56,6 +56,8 @@ class AbstractWorkerTaskCourier(object):
         - get_task - returns one task from queue.
         - wait_for_task - waits for task and returns it.
         - return_task_result - returns result to the client side.
+        - bulk_return_task_results - returns the result of processing many
+          tasks to the client.
     """
 
     def get_tasks(self, queue_name, max_count) -> List[Tuple]:
@@ -83,6 +85,11 @@ class AbstractWorkerTaskCourier(object):
         Worker side method."""
         raise NotImplementedError
 
+    def bulk_return_task_results(self, queue_name, task_results):
+        """Return the result of processing many tasks to the client.
+        Worker side method."""
+        raise NotImplementedError
+
 
 class AbstractClientWorkerTaskCourier(
         AbstractWorkerTaskCourier, AbstractClientTaskCourier):
@@ -103,5 +110,7 @@ class AbstractClientWorkerTaskCourier(
         - get_task - returns one task from queue.
         - wait_for_task - waits for task and returns it.
         - return_task_result - returns result to the client side.
+        - bulk_return_task_results - returns the result of processing many
+          tasks to the client.
     """
     pass
