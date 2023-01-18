@@ -85,8 +85,9 @@ class AbstractWorkerTaskCourier(object):
         Worker side method."""
         raise NotImplementedError
 
-    def bulk_return_task_results(self, queue_name, task_results):
+    def bulk_return_task_results(self, queue_name, tasks) -> None:
         """Return the result of processing many tasks to the client.
+        tasks is dict: {task_id: task_result}
         Worker side method."""
         raise NotImplementedError
 

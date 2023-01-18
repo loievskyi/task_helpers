@@ -66,11 +66,12 @@ class BaseWorker(AbstractWorker):
         Method method for sending task results to the clients.
         """
         if self.needs_result_returning:
-            for task_id, task_result in tasks:
-                self.task_courier.return_task_result(
-                    queue_name=self.queue_name,
-                    task_id=task_id,
-                    task_result=task_result)
+            tasks_dict = {task_id: task_result
+                          for task_id, task_result in tasks}
+            self.task_courier.bulk_return_task_results(
+                queue_name=self.queue_name,
+                tasks=tasks_dict,
+            )
 
     def perform(self, total_iterations):
         """

@@ -443,7 +443,7 @@ class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         self.task_courier.result_timeout = 100
         self.task_courier.bulk_return_task_results(
             queue_name=queue_name,
-            task_results=start_task_results
+            tasks=start_task_results
         )
 
         for task_id, task_result in start_task_results.items():
@@ -464,7 +464,7 @@ class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         self.task_courier.result_timeout = 2
         self.task_courier.bulk_return_task_results(
             queue_name=queue_name,
-            task_results=start_task_results
+            tasks=start_task_results
         )
 
         for task_id, task_result in start_task_results.items():
