@@ -434,11 +434,11 @@ class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
     def test_bulk_return_task_results(self):
         queue_name = "test_queue"
 
-        start_task_results = dict()
+        start_task_results = list()
         for num in range(100):
             task_id = uuid.uuid1()
             task_result = num
-            start_task_results[task_id] = task_result
+            start_task_results.append((task_id, task_result))
 
         self.task_courier.result_timeout = 100
         self.task_courier.bulk_return_task_results(
@@ -446,7 +446,7 @@ class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
             tasks=start_task_results
         )
 
-        for task_id, task_result in start_task_results.items():
+        for task_id, task_result in start_task_results:
             name = self.task_courier._get_full_queue_name(
                 queue_name=queue_name, sufix="results:") + str(task_id)
             value = pickle.loads(self.redis_connection.get(name))
@@ -455,11 +455,11 @@ class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
     def test_bulk_return_task_results_correct_timeout(self):
         queue_name = "test_queue"
 
-        start_task_results = dict()
+        start_task_results = list()
         for num in range(100):
             task_id = uuid.uuid1()
             task_result = num
-            start_task_results[task_id] = task_result
+            start_task_results.append((task_id, task_result))
 
         self.task_courier.result_timeout = 2
         self.task_courier.bulk_return_task_results(
@@ -467,14 +467,14 @@ class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
             tasks=start_task_results
         )
 
-        for task_id, task_result in start_task_results.items():
+        for task_id, task_result in start_task_results:
             name = self.task_courier._get_full_queue_name(
                 queue_name=queue_name, sufix="results:") + str(task_id)
             value = pickle.loads(self.redis_connection.get(name))
             self.assertEqual(value, task_result)
 
         time.sleep(2)
-        for task_id, task_result in start_task_results.items():
+        for task_id, task_result in start_task_results:
             name = self.task_courier._get_full_queue_name(
                 queue_name=queue_name, sufix="results:") + str(task_id)
             value = self.redis_connection.get(name)

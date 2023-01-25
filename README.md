@@ -92,15 +92,18 @@ pip install task_helpers
 the couriers module is responsible for sending tasks from the worker to the client and back, as well as checking the execution status.
 
 ### Client side methods (ClientTaskCourier):
-- get_task_result - returns task retuls, if it exists.
-- wait_for_task_result - Waits for the task result to appear.
-- add_task_to_queue - adds a task to the queue for processing;
+- get_task_result - returns the result of the task, if it exists.
+- wait_for_task_result - waits for the result of the task to appear, and then returns it.
+- add_task_to_queue - adds one task to the queue for processing.
+- bulk_add_tasks_to_queue - adds many tasks to the queue for processing.
+- check_for_done - сhecks if the task has completed.
 
 ### Worker side methods (WorkerTaskCourier):
-- get_tasks - pops tasks from queue and returns it.
-- get_task - returns one task from queue.
-- wait_for_task - waits for task and returns it.
-- return_task_result - returns result to the client side.
+- get_task - pops one task from the queue and returns it.
+- bulk_get_tasks - pops many tasks from the queue and returns them.
+- wait_for_task - Waits for a task to appear, pops it from the queue, and returns it.
+- return_task_result - returns the result of the processing of the task to the client side.
+- bulk_return_task_results - returns the results of processing multiple tasks to the client side.
 
 ### ClientWorkerTaskCourier:
 - all of the above

@@ -41,12 +41,13 @@ class RedisClientTaskCourier(FullQueueNameMixin, AbstractClientTaskCourier):
     Class for the client side of task helpers using redis.
 
     Client side methods:
-        - get_task_result - returns task retuls, if it exists.
-        - wait_for_task_result - Waits for the task result to appear.
-        - add_task_to_queue - adds a task to the redis queue for processing.
-        - bulk_add_tasks_to_queue - adds many tasks to the redis queue for
+        - get_task_result - returns the result of the task, if it exists.
+        - wait_for_task_result - waits for the result of the task to appear,
+          and then returns it.
+        - add_task_to_queue - adds one task to the queue for processing.
+        - bulk_add_tasks_to_queue - adds many tasks to the queue for
           processing.
-        - check_for_done - Checks if the task has completed.
+        - check_for_done - сhecks if the task has completed.
     """
 
     refresh_timeout = 0.1
@@ -60,9 +61,9 @@ class RedisClientTaskCourier(FullQueueNameMixin, AbstractClientTaskCourier):
         return uuid.uuid1() if self._uuid1_is_safe else uuid.uuid4()
 
     def get_task_result(self, queue_name, task_id, delete_data=True):
-        """Returns task retult, if it exists.
+        """Returns the result of the task, if it exists.
         Otherwise, raises exceptions.TaskResultDoesNotExist. If an error occurs
-        during the execution of the task returns exceptions.PerformTaskError.
+        during the execution of the task, returns exceptions.PerformTaskError.
         Client side method.
 
         - queue_name - queue name, used in the add_task_to_queue method.
@@ -81,10 +82,9 @@ class RedisClientTaskCourier(FullQueueNameMixin, AbstractClientTaskCourier):
 
     def wait_for_task_result(
             self, queue_name, task_id, delete_data=True, timeout=None):
-        """Waits for the task result to appear, and then returns it. Blocking
-        method. Checks every self.refresh_timeout seconds for a result.
-        Raises TimeoutError in case of timeout. If an error occurs during the
-        execution of the task raises exceptions.PerformTaskError.
+        """Waits for the result of the task to appear, and then returns it.
+        Raises TimeoutError in case of timeout. If an error occurs
+        during the execution of the task, returns exceptions.PerformTaskError.
         Client side method.
 
         - queue_name - queue name, used in the add_task_to_queue method.
@@ -112,7 +112,7 @@ class RedisClientTaskCourier(FullQueueNameMixin, AbstractClientTaskCourier):
         raise TimeoutError
 
     def add_task_to_queue(self, queue_name, task_data):
-        """Adds a task to the redis queue for processing. Returns task_id.
+        """Adds one task to the queue for processing. Returns task_id.
         Client side method.
 
         - queue_name - queue name, used in the add_task_to_queue method.
@@ -126,8 +126,8 @@ class RedisClientTaskCourier(FullQueueNameMixin, AbstractClientTaskCourier):
         return task_id
 
     def bulk_add_tasks_to_queue(self, queue_name, tasks_data):
-        """Adds many tasks to the redis queue for processing.
-        Returns list of task_ids.
+        """Adds many tasks to the queue for processing.
+        Returns a list of task_ids.
         Client side method.
 
         - queue_name - queue name, used in the add_task_to_queue method.
@@ -147,9 +147,13 @@ class RedisClientTaskCourier(FullQueueNameMixin, AbstractClientTaskCourier):
         return task_ids
 
     def check_for_done(self, queue_name, task_id):
-        """Checks if the task has completed.
+        """Сhecks if the task has completed.
         Returns True - if task is done (successful or unsuccessful),
-        or False if there is no task result yet."""
+        or False if there is no task result yet.
+
+        - queue_name - queue name, used in the add_task_to_queue method.
+        - task_id - id of the task that the add_task_to_queue method returned.
+        """
 
         name = self._get_full_queue_name(queue_name, "results:") + str(task_id)
         return bool(self.redis_connection.exists(name))
@@ -160,12 +164,14 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, AbstractWorkerTaskCourier):
     Class for the worker side of task helpers using redis.
 
     Worker side methods:
-        - bulk_get_tasks - pops tasks from queue and returns it.
-        - get_task - returns one task from redis queue.
-        - wait_for_task - waits for task and returns it.
-        - return_task_result - returns result to the client side via redis.
-        - bulk_return_task_results - returns the result of processing many
-          tasks to the client.
+        - get_task - pops one task from the queue and returns it.
+        - bulk_get_tasks - pops many tasks from the queue and returns them.
+        - wait_for_task - Waits for a task to appear, pops it from the queue,
+          and returns it.
+        - return_task_result - returns the result of the processing of the task
+          to the client side.
+        - bulk_return_task_results - returns the results of processing
+          multiple tasks to the client side.
     """
 
     result_timeout = 600  # Set None to keep task_result permanently.
@@ -173,27 +179,9 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, AbstractWorkerTaskCourier):
     def __init__(self, redis_connection):
         self.redis_connection = redis_connection
 
-    def bulk_get_tasks(self, queue_name, max_count):
-        """Pops tasks from queue and returns it. The number of task which
-        depends on max_count and the number of elements in the queue.
-        Worker side method.
-
-        Task is tuple of (task_id, task_data). The result like
-        [(task_id, task_data), (task_id, task_data), ...].
-
-        - queue_name - queue name, used in the add_task_to_queue method.
-        - max_count - the maximum number of tasks that can be extracted from
-          the queue"""
-
-        tasks = self.redis_connection.lpop(
-            self._get_full_queue_name(queue_name=queue_name, sufix="pending"),
-            count=max_count)
-        if tasks:
-            return [pickle.loads(task) for task in tasks]
-        return []
-
     def get_task(self, queue_name):
-        """Returns one task from redis queue as tuple (task_id, task_data).
+        """Pops one task from the queue and returns it.
+        Task is a tuple (task_id, task_data)
         If task doesn't exists, raises exceptions.TaskDoesNotExist.
         Worker side method.
 
@@ -207,9 +195,28 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, AbstractWorkerTaskCourier):
         task_id, task_data = pickle.loads(task)
         return task_id, task_data
 
+    def bulk_get_tasks(self, queue_name, max_count):
+        """Pops many tasks from the queue and returns them. The number of task
+        which depends on max_count and the number of elements in the queue.
+        Tasks are [(task_id, task_data), (task_id, task_data), ...].
+        If there are no tasks in the queue, it will return an empty list.
+        Worker side method.
+
+        - queue_name - queue name, used in the add_task_to_queue method.
+        - max_count - the maximum number of tasks that can be extracted from
+          the queue"""
+
+        tasks = self.redis_connection.lpop(
+            self._get_full_queue_name(queue_name=queue_name, sufix="pending"),
+            count=max_count)
+        if tasks:
+            return [pickle.loads(task) for task in tasks]
+        return []
+
     def wait_for_task(self, queue_name, timeout=None):
-        """Returns one task from redis queue as tuple (task_id, task_data).
-        If timeout is None (default), then waits task indefinitely.
+        """Waits for a task to appear, pops it from the queue, and returns it.
+        Task is a tuple (task_id, task_data).
+        If timeout is None (default), then waits for a task indefinitely.
         Raises TimeoutError in case of timeout.
         Worker side method.
 
@@ -227,12 +234,13 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, AbstractWorkerTaskCourier):
         return task_id, task_data
 
     def return_task_result(self, queue_name, task_id, task_result):
-        """Return the result of processing the task to the client via redis.
+        """Returns the result of the processing of the task to the client side.
         Worker side method.
 
         - queue_name - queue name, used in the add_task_to_queue method.
         - task_id - id of the task.
-        - task_data - task objects, what will be returned to the client."""
+        - task_result - the result of the processing of the task, what will be
+          returned to the client."""
 
         name = self._get_full_queue_name(
             queue_name=queue_name, sufix="results:") + str(task_id)
@@ -241,14 +249,14 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, AbstractWorkerTaskCourier):
                                   ex=self.result_timeout)
 
     def bulk_return_task_results(self, queue_name, tasks):
-        """Return the result of processing many tasks to the client via redis.
-        tasks is dict: {task_id: task_result}
+        """returns the results of processing multiple tasks to the client side.
+        Tasks is list of tuples: [(task_id, task_result), ...]
         Worker side method.
 
         - queue_name - queue name, used in the add_task_to_queue method.
-        - tasks - a dictionary where keys are task_ids and values are
-          task_results."""
+        - tasks - a list of tuples, like [(task_id, task_result), ...]"""
 
+        tasks = {task_id: task_data for task_id, task_data in tasks}
         pipeline = self.redis_connection.pipeline()
         for task_id, task_result in tasks.items():
             name = self._get_full_queue_name(
@@ -266,19 +274,22 @@ class RedisClientWorkerTaskCourier(
     Class for the client and worker sides of task helpers, works via redis.
 
     Client side methods:
-        - get_task_result - returns task retuls, if it exists.
-        - wait_for_task_result - Waits for the task result to appear.
-        - add_task_to_queue - adds a task to the redis queue for processing.
-        - bulk_add_tasks_to_queue - adds many tasks to the redis queue for
+        - get_task_result - returns the result of the task, if it exists.
+        - wait_for_task_result - waits for the result of the task to appear,
+          and then returns it.
+        - add_task_to_queue - adds one task to the queue for processing.
+        - bulk_add_tasks_to_queue - adds many tasks to the queue for
           processing.
-        - check_for_done - Checks if the task has completed.
+        - check_for_done - сhecks if the task has completed.
 
     Worker side methods:
-        - bulk_get_tasks - pops tasks from queue and returns it.
-        - get_task - returns one task from redis queue.
-        - wait_for_task - waits for task and returns it.
-        - return_task_result - returns result to the client side via redis.
-        - bulk_return_task_results - returns the result of processing many
-          tasks to the client.
+        - get_task - pops one task from the queue and returns it.
+        - bulk_get_tasks - pops many tasks from the queue and returns them.
+        - wait_for_task - Waits for a task to appear, pops it from the queue,
+          and returns it.
+        - return_task_result - returns the result of the processing of the task
+          to the client side.
+        - bulk_return_task_results - returns the results of processing
+          multiple tasks to the client side.
     """
     pass
