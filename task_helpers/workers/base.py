@@ -59,6 +59,22 @@ class BaseWorker(AbstractWorker):
         Abstract method for processing tasks. Should return a list of tasks:
         [(task_id, task_result), (task_id, task_result), ...]
         """
+        output_tasks = []
+        for task in tasks:
+            task_id, task_data = task
+            try:
+                output_tasks.append(task_id, self.perform_task(task))
+            except Exception as ex:
+                task_result = exceptions.PerformTaskError(
+                    task=task, exception=ex)
+                output_tasks.append((task_id, task_result))
+        return output_tasks
+
+    def perform_single_task(self, task):
+        """
+        Abstract method for processing one task.
+        Task is tuple: (task_id, task_data). Should return a task resut.
+        """
         raise NotImplementedError
 
     def return_task_results(self, tasks):
@@ -92,5 +108,6 @@ class BaseWorker(AbstractWorker):
                         task=task, exception=ex)
                     output_tasks.append((task_id, task_result_data))
 
-            self.return_task_results(tasks=output_tasks)
+            if self.needs_result_returning:
+                self.return_task_results(tasks=output_tasks)
             time.sleep(self.after_iteration_sleep_time)
