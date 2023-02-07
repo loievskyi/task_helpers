@@ -19,26 +19,21 @@ class ClassicWorker(BaseWorker):
 
     max_tasks_per_iteration = 1
 
-    def perform_tasks(self, tasks):
+    def perform_single_task(self, task):
         """
-        Method for processing tasks. Returns a list of tasks.
-        task is a tuple: (task_id, task_data).
+        Method for task processing.
+        Task is a tuple: (task_id, task_data).
         task_data is a dictionary with keys "function", "args" and "kwargs".
         Calls a function with args "args" and kwargs "kwargs", unpacking them,
         and returns the execution result. Arguments "args" and "kwargs" are
         optional.
         """
-        results = []
-        for task in tasks:
-            task_id, task_data = task
-            assert isinstance(task_data, dict), \
-                "task_data must be a dict instance."
-            assert "function" in task_data.keys(), \
-                "task_data must have a \"function\" key."
-            function = task_data["function"]
-            function_args = task_data.get("args", tuple())
-            function_kwargs = task_data.get("kwargs", dict())
-            task_result = function(*function_args, **function_kwargs)
-            results.append((task_id, task_result))
-
-        return results
+        task_id, task_data = task
+        assert isinstance(task_data, dict), \
+            "task_data must be a dict instance."
+        assert "function" in task_data.keys(), \
+            "task_data must have a \"function\" key."
+        function = task_data["function"]
+        function_args = task_data.get("args", tuple())
+        function_kwargs = task_data.get("kwargs", dict())
+        return function(*function_args, **function_kwargs)
