@@ -86,11 +86,9 @@ class BaseAsyncWorker(AbstractAsyncWorker):
         """
         Method method for sending task results to the clients.
         """
-        tasks_dict = {task_id: task_result
-                      for task_id, task_result in tasks}
         self.task_courier.bulk_return_task_results(
             queue_name=self.queue_name,
-            tasks=tasks_dict,
+            tasks=tasks,
         )
 
     async def _async_perform_inner(self, input_tasks):
@@ -107,7 +105,7 @@ class BaseAsyncWorker(AbstractAsyncWorker):
                 output_tasks.append((task_id, task_result_data))
 
         if self.needs_result_returning:
-            self.return_task_results(tasks=output_tasks)
+            await self.return_task_results(tasks=output_tasks)
 
         while True:
             try:
@@ -129,4 +127,7 @@ class BaseAsyncWorker(AbstractAsyncWorker):
             input_tasks = await self.wait_for_tasks()
             coro = asyncio.create_task(self._async_perform_inner(input_tasks))
             self.perform_tasks_coros.add(coro)
+            await asyncio.sleep(self.after_iteration_sleep_time)
+
+        while len(self.perform_tasks_coros) > 0:
             await asyncio.sleep(self.after_iteration_sleep_time)
