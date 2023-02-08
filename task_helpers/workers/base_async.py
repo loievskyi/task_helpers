@@ -6,7 +6,7 @@ from task_helpers.couriers.abstract import AbstractWorkerTaskCourier
 from task_helpers import exceptions
 
 
-class AsyncWorker(AbstractAsyncWorker):
+class BaseAsyncWorker(AbstractAsyncWorker):
     """
     Base class for workers.
     Initialization requires an instance of task_courier.
@@ -56,7 +56,7 @@ class AsyncWorker(AbstractAsyncWorker):
                 max_count=self.max_tasks_per_iteration)
             if tasks:
                 return tasks
-            asyncio.sleep(self.empty_queue_sleep_time)
+            await asyncio.sleep(self.empty_queue_sleep_time)
 
     async def perform_tasks(self, tasks):
         """
@@ -67,7 +67,8 @@ class AsyncWorker(AbstractAsyncWorker):
         for task in tasks:
             task_id, task_data = task
             try:
-                output_tasks.append(task_id, await self.perform_task(task))
+                output_task = task_id, await self.perform_single_task(task)
+                output_tasks.append(output_task)
             except Exception as ex:
                 task_result = exceptions.PerformTaskError(
                     task=task, exception=ex)
@@ -112,9 +113,9 @@ class AsyncWorker(AbstractAsyncWorker):
             try:
                 self.perform_tasks_coros.remove(asyncio.current_task())
             except Exception:
-                asyncio.sleep(self.max_tasks_sleep_time)
+                await asyncio.sleep(self.max_tasks_sleep_time)
 
-    def perform(self, total_iterations):
+    async def perform(self, total_iterations):
         """
         The main method that starts the task worker.
         Takes a task from the queue, calls the "perform_task method",
