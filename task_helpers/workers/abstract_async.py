@@ -37,7 +37,7 @@ class AbstractAsyncWorker:
         """
         raise NotImplementedError
 
-    def perform(self, total_iterations: int) -> Awaitable[None]:
+    async def perform(self, total_iterations: int) -> Awaitable[None]:
         """
         Abstract method for starting a worker.
         """
