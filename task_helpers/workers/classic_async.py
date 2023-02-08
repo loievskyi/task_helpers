@@ -2,10 +2,10 @@ import inspect
 import asyncio
 import functools
 
-from .perform_many_async import AsyncPerformManyWorker
+from .base_async import BaseAsyncWorker
 
 
-class ClassicWorker(AsyncPerformManyWorker):
+class ClassicAsyncWorker(BaseAsyncWorker):
     """
     Сlassic async worker, where the task is a tuple: (task_id, task_data).
     task_data is a dictionary with keys "function", "args" and "kwargs".
