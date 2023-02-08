@@ -63,7 +63,8 @@ class BaseWorker(AbstractWorker):
         for task in tasks:
             task_id, task_data = task
             try:
-                output_tasks.append(task_id, self.perform_task(task))
+                output_task = task_id, self.perform_single_task(task)
+                output_tasks.append(output_task)
             except Exception as ex:
                 task_result = exceptions.PerformTaskError(
                     task=task, exception=ex)

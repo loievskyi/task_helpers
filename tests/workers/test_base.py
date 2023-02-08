@@ -39,6 +39,14 @@ class BaseWorkerTestCase(RedisSetupMixin, unittest.TestCase):
                         for task_id, task_data in tasks]
         return task_results
 
+    def perform_single_task_dependent_on_data_monkeypatching(self, task):
+        task_id, task_data = task
+        if str(task_data) == "RAISE EXCEPTION":
+            raise self.CustomException(text="new custom ex text")
+        else:
+            task_result = str(task_data) + "text"
+            return task_result
+
     """
     ===========================================================================
     __init__
@@ -85,8 +93,47 @@ class BaseWorkerTestCase(RedisSetupMixin, unittest.TestCase):
     """
 
     def test_perform_tasks(self):
+        self.worker.perform_single_task = \
+            self.perform_single_task_dependent_on_data_monkeypatching
+        input_tasks = [
+            (uuid.uuid1(), "task_data_0"),
+            (uuid.uuid1(), "RAISE EXCEPTION"),
+            (uuid.uuid1(), "task_data_2"),
+        ]
+        output_tasks = self.worker.perform_tasks(tasks=input_tasks)
+
+        self.assertEqual(len(input_tasks), len(output_tasks))
+        self.assertEqual(len(input_tasks), 3)
+        self.assertEqual(len(output_tasks), 3)
+
+        # first task
+        input_task_id, input_task_data = input_tasks[0]
+        output_task_id, output_task_data = output_tasks[0]
+        self.assertEqual(input_task_id, output_task_id)
+        self.assertEqual(output_task_data, "task_data_0text")
+
+        # second task
+        input_task_id, input_task_data = input_tasks[1]
+        output_task_id, output_task_data = output_tasks[1]
+        self.assertEqual(input_task_id, output_task_id)
+        self.assertEqual(type(output_task_data), exceptions.PerformTaskError)
+        self.assertEqual(type(output_task_data.exception), self.CustomException)
+        self.assertEqual(output_task_data.exception.text, "new custom ex text")
+
+        # third task
+        input_task_id, input_task_data = input_tasks[2]
+        output_task_id, output_task_data = output_tasks[2]
+        self.assertEqual(input_task_id, output_task_id)
+        self.assertEqual(output_task_data, "task_data_2text")
+
+    """
+    ===========================================================================
+    perform_single_task
+    ===========================================================================
+    """
+    def test_perform_single_task(self):
         with self.assertRaises(expected_exception=NotImplementedError):
-            self.worker.perform_tasks(tasks=[(uuid.uuid1(), "task_data")])
+            self.worker.perform_single_task(task=(uuid.uuid1(), "task_data"))
 
     """
     ===========================================================================
@@ -94,7 +141,7 @@ class BaseWorkerTestCase(RedisSetupMixin, unittest.TestCase):
     ===========================================================================
     """
 
-    def test_return_task_results_if_needs_result_returning_True(self):
+    def test_return_task_results(self):
         queue_name = "test_return_task_results"
         task_data = "test_task_data"
         task_id = self.task_courier.add_task_to_queue(
@@ -119,28 +166,6 @@ class BaseWorkerTestCase(RedisSetupMixin, unittest.TestCase):
 
         self.assertTrue(exists_task_result)
         self.assertEqual(task_result, str(task_data))
-
-    def test_return_task_results_if_needs_result_returning_False(self):
-        queue_name = "test_return_task_results"
-        task_data = "test_task_data"
-        task_id = self.task_courier.add_task_to_queue(
-            queue_name=queue_name,
-            task_data=task_data)
-
-        output_tasks = [(task_id, task_data)]
-
-        # monkey patching
-        self.worker.perform_tasks = self.perform_tasks_monkeypatching
-        self.worker.queue_name = queue_name
-        self.worker.needs_result_returning = False
-
-        self.worker.return_task_results(tasks=output_tasks)
-
-        exists_task_result = self.task_courier.check_for_done(
-            queue_name=queue_name,
-            task_id=task_id)
-
-        self.assertFalse(exists_task_result)
 
     """
     ===========================================================================
