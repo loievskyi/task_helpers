@@ -140,6 +140,28 @@ class BaseAsyncWorkerTestCase(RedisSetupMixin, unittest.TestCase):
         self.assertEqual(input_task_id, output_task_id)
         self.assertEqual(output_task_data, "task_data_2text")
 
+    def test_perform_tasks_is_FIFO(self):
+        self.worker.perform_single_task = \
+            self.perform_single_task_dependent_on_data_monkeypatching
+        input_tasks = [
+            (uuid.uuid1(), "task_data_0"),
+            (uuid.uuid1(), "task_data_1"),
+            (uuid.uuid1(), "task_data_2"),
+        ]
+        output_tasks = asyncio.run(
+            self.worker.perform_tasks(tasks=input_tasks)
+        )
+
+        self.assertEqual(len(input_tasks), len(output_tasks))
+        self.assertEqual(len(input_tasks), 3)
+        self.assertEqual(len(output_tasks), 3)
+
+        for num in range(3):
+            input_task_id, input_task_data = input_tasks[num]
+            output_task_id, output_task_data = output_tasks[num]
+            self.assertEqual(input_task_id, output_task_id)
+            self.assertEqual(output_task_data, f"task_data_{num}text")
+
     """
     ===========================================================================
     perform_single_task
