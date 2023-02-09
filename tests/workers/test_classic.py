@@ -48,6 +48,7 @@ class ClassicWorkerTestCase(RedisSetupMixin, unittest.TestCase):
     ===========================================================================
     """
 
+    # tested single method
     def test_perform_tasks_if_all_ok(self):
         input_tasks = [self.generate_input_task() for _ in range(5)]
         output_tasks = self.worker.perform_tasks(tasks=input_tasks)
@@ -74,20 +75,7 @@ class ClassicWorkerTestCase(RedisSetupMixin, unittest.TestCase):
         for num, task in enumerate(output_tasks):
             self.assertEqual(task[1], f"arg_text_{num}kwarg_text_{num}")
 
-    def test_perform_tasks_if_task_data_is_not_dict_instance(self):
-        input_tasks = [self.generate_input_task(task_data=123)]
-        with self.assertRaises(AssertionError):
-            self.worker.perform_tasks(tasks=input_tasks)
-
-    def test_perform_tasks_if_task_data_doesnt_have_the_function_key(self):
-        task_data = {
-            "args": ("arg_text",),
-            "kwargs": {"kwarg1": "kwarg_text"},
-        }
-        input_tasks = [self.generate_input_task(task_data=task_data)]
-        with self.assertRaises(AssertionError):
-            self.worker.perform_tasks(tasks=input_tasks)
-
+    # tested single method
     def test_perform_tasks_if_task_data_without_function_args_and_kwargs(self):
         task_data = {
             "function": self.task_function_without_args_and_kwargs,
@@ -100,6 +88,7 @@ class ClassicWorkerTestCase(RedisSetupMixin, unittest.TestCase):
         for task in output_tasks:
             self.assertEqual(task[1], "example text")
 
+    # tested single method
     def test_perform_tasks_if_task_data_function_is_class_method(self):
         # self are ignored
 
@@ -115,6 +104,54 @@ class ClassicWorkerTestCase(RedisSetupMixin, unittest.TestCase):
         self.assertEqual(len(input_tasks), len(output_tasks))
         for task in output_tasks:
             self.assertEqual(task[1], "arg_textkwarg_text")
+
+    """
+    ===========================================================================
+    perform_single_task
+    ===========================================================================
+    """
+
+    def test_perform_single_task_if_all_ok(self):
+        input_task = self.generate_input_task()
+        output_task_data = self.worker.perform_single_task(task=input_task)
+
+        self.assertEqual(output_task_data, "arg_textkwarg_text")
+
+    def test_perform_single_task_if_task_data_without_function_args_and_kwargs(self):
+        task_data = {
+            "function": self.task_function_without_args_and_kwargs,
+        }
+        input_task = self.generate_input_task(task_data=task_data)
+        output_task_data = self.worker.perform_single_task(task=input_task)
+
+        self.assertEqual(output_task_data, "example text")
+
+    def test_perform_single_task_if_task_data_function_is_class_method(self):
+        # self are ignored
+
+        task_data = {
+            "function": self.task_method,
+            "args": ("arg_text",),
+            "kwargs": {"kwarg1": "kwarg_text"},
+        }
+        input_task = self.generate_input_task(task_data=task_data)
+        output_task_data = self.worker.perform_single_task(task=input_task)
+
+        self.assertEqual(output_task_data, "arg_textkwarg_text")
+
+    def test_perform_single_task_if_task_data_doesnt_have_the_function_key(self):
+        task_data = {
+            "args": ("arg_text",),
+            "kwargs": {"kwarg1": "kwarg_text"},
+        }
+        input_task = self.generate_input_task(task_data=task_data)
+        with self.assertRaises(AssertionError):
+            self.worker.perform_single_task(task=input_task)
+
+    def test_perform_single_task_if_task_data_is_not_dict_instance(self):
+        input_task = self.generate_input_task(task_data=123)
+        with self.assertRaises(AssertionError):
+            self.worker.perform_single_task(task=input_task)
 
     """
     ===========================================================================
