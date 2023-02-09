@@ -1,4 +1,4 @@
 __title__ = "Task helpers"
-__version__ = "1.1.1"
+__version__ = "1.2.0"
 __author__ = "Viacheslav Loievskyi"
 __license__ = "BSD 3-Clause"

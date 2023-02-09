@@ -1,3 +1,9 @@
+# [1.2.0] - 2023-02-xx
+- Added async workers:
+  - AbstractAsyncWorker
+  - BaseAsyncWorker
+  - ClassicAsyncWorker
+
 # [1.1.1] - 2023-01-23
 - Readme changes
 - Changes on docs

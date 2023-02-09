@@ -9,7 +9,7 @@ def read_file(file_path):
 
 setup(
     name="task_helpers",
-    version="1.1.1",
+    version="1.2.0",
     url="https://github.com/loievskyi/task_helpers",
     license="BSD",
     description="A package for creating task helpers.",
@@ -19,11 +19,11 @@ setup(
     author_email="loievskyi.slava@gmail.com",
     packages=find_packages(exclude=["tests*", "task_helpers/future*"]),
     include_package_data=True,
-    install_requires=["redis", "aioredis"],
+    install_requires=["redis"],
     python_requires=">=3.8",
     zip_safe=False,
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Intended Audience :: Information Technology",
         "License :: OSI Approved :: BSD License",
