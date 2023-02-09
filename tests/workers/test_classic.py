@@ -21,7 +21,11 @@ class ClassicWorkerTestCase(RedisSetupMixin, unittest.TestCase):
         self.worker.queue_name = self.queue_name
         self.worker.max_tasks_per_iteration = 1
 
-    def generate_input_task(self, task_data=None):
+    @staticmethod
+    def task_function(arg1, *, kwarg1):
+        return str(arg1) + str(kwarg1)
+
+    def generate_input_task(self, task_data=None, task_function=task_function):
         task_id = uuid.uuid4()
         if task_data is None:
             task_data = {
@@ -30,10 +34,6 @@ class ClassicWorkerTestCase(RedisSetupMixin, unittest.TestCase):
                 "kwargs": {"kwarg1": "kwarg_text"},
             }
         return (task_id, task_data)
-
-    @staticmethod
-    def task_function(arg1, *, kwarg1):
-        return str(arg1) + str(kwarg1)
 
     @staticmethod
     def task_function_without_args_and_kwargs():
