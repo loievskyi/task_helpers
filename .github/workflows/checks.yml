@@ -1,8 +1,8 @@
-name: Code checks
+name: Tests
 
 on:
   push:
-    branches: [ master, dev/slava ]
+    branches: [ master ]
   pull_request:
     branches: [ master ]
 
