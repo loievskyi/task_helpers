@@ -4,7 +4,7 @@ services:
   python_test:
     build: .
     restart: "no"
-    command: python3 -m unittest
+    command: coverage run -m unittest
     depends_on:
       - "redis_test"
     environment:
