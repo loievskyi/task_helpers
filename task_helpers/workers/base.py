@@ -90,7 +90,7 @@ class BaseWorker(AbstractWorker):
     def perform(self, total_iterations):
         """
         The main method that starts the task worker.
-        Takes a task from the queue, calls the "perform_task method",
+        Takes tasks from the queue, calls the "perform_tasks" method,
         and returns the result if "needs_result_returning" field is True.
 
         - total_iterations - how many iterations should the worker perform.
