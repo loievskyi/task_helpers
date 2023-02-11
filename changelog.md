@@ -1,5 +1,5 @@
 # [1.3.0] - 2023-02-11
-- Added async workers & tests for it:
+- Added async workers & tests for themt:
   - AbstractAsyncWorker
   - BaseAsyncWorker
   - ClassicAsyncWorker
@@ -12,7 +12,6 @@
 - Fixes on courier: now courier.bulk_return_task_results "tasks" arg is list of tuples [(task_id, task_result), ...]
 - Performanse improvements.
 - Changes on docs & readme.
-
 
 # [1.1.0] - 2023-01-23 - withdrawn
 - New logic for _generate_task_id method.

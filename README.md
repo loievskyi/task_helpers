@@ -3,7 +3,7 @@ The package allows you to work with tasks.
 The idea is that it would be possible to create a task and send it for execution / processing somewhere (to the worker), without waiting for the result to be executed in the same block of code.
 Or, for example, different clients (from different threads) can send many tasks for processing and each wait for its own result.
 
-## Usage example
+## Usage example. Base worker
 ```bash
 # Run redis (This can be done in many ways, not necessarily through docker):
 docker run -p 6379:6379 redis
@@ -111,23 +111,34 @@ the couriers module is responsible for sending tasks from the worker to the clie
 ## The workers module
 The workers module is intended for executing and processing tasks.
 
-### BaseWorker
+### BaseWorker & BaseAsyncWorker
 A worker that can process many tasks in one iteration. (This can be useful if task_data are objects on which some operations can be done in bulk)
 
 ### BaseWorker methods:
 - wait_for_tasks - waits for tasks in the queue, pops and returns them;
-- perform_tasks - abstract method for processing tasks. Should return a list of tasks.
+- perform_tasks - method for processing tasks. Should return a list of tasks.
+- perform_single_task - abstract method for processing one task. Should return the result of the task. Not used if the "perform_tasks" method is overridden.
 - return_task_results - method method for sending task results to the clients.
 - perform - the main method that starts the task worker. total_iterations argument are required (how many processing iterations the worker should do.)
 
-### ClassicWorker
+### BaseAsyncWorker methods:
+The same, but the methods are asynchronous and have slightly different logic inside.
+
+### ClassicWorker & ClassicAsyncWorker
 Сlassic worker, where the task is a tuple: (task_id, task_data).
 task_data is a dictionary with keys "function", "args" and "kwargs".
 Arguments "args" and "kwargs" are optional.
 
 ### ClassicWorker methods:
-- perform_tasks - Method for processing tasks. Returns a list of tasks.
+- perform_single_task - method for processing one task. Should return the result of the task. Not used if the "perform_tasks" method is overridden.
 task is a tuple: (task_id, task_data).
 task_data is a dictionary with keys "function", "args" and "kwargs".
 Calls a function with args "args" and kwargs "kwargs", unpacking them, and returns the execution result.
 Arguments "args" and "kwargs" are optional.
+
+### ClassicAsyncWorker methods:
+- perform_single_task - method for processing one task. Should return the result of the task. Not used if the "perform_tasks" method is overridden.
+task is a tuple: (task_id, task_data).
+task_data is a dictionary with keys "function", "args" and "kwargs".
+Calls a function asynchronously, with args "args" and kwargs "kwargs", unpacking them, and returns the execution result.
+Arguments "args" and "kwargs" are optional. If the function is not asynchronous, will be called in "loop.run_in_executor" method.
