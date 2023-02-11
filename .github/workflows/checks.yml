@@ -1,0 +1,20 @@
+name: Code checks
+
+on:
+  push:
+    branches: [ master, dev/slava ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v3
+
+      - name: run tests via docker-compose
+        run: docker-compose up --exit-code-from python_test --abort-on-container-exit
+
+      - name: down docker containers
+        run: docker-compose down
