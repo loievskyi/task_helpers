@@ -1,33 +1,20 @@
-# [1.2.0] - 2023-02-xx
-- Added async workers:
+# [1.3.0] - 2023-02-11
+- Added async workers & tests for it:
   - AbstractAsyncWorker
   - BaseAsyncWorker
   - ClassicAsyncWorker
 
-# [1.1.1] - 2023-01-23
-- Readme changes
-- Changes on docs
-- fixes on courier: now courier.bulk_return_task_results tasks arg is list of tuples [(task_id, task_result), ...]
+# [1.2.0] - 2023-02-11
+- Added bulk operations for TaskCourier's:
+  - ClientTaskCourier - added bulk_add_tasks_to_queue method & tests for it.
+  - WorkerTaskCourier - added bulk_return_task_results method & tests for it.
+  - Renamed WorkerTaskCourier.get_tasks => WorkerTaskCourier.bulk_get_tasks.
+- Fixes on courier: now courier.bulk_return_task_results "tasks" arg is list of tuples [(task_id, task_result), ...]
+- Performanse improvements.
+- Changes on docs & readme.
 
-# [1.1.0] - 2023-01-23
-- New logic for _generate_task_id method.
-- ClientTaskCourier.added bulk_add_tasks_to_queue method & tests for it.
-- WorkerTaskCourier.added bulk_return_task_results method & tests for it.
-- Renamed WorkerTaskCourier.get_tasks => WorkerTaskCourier.bulk_get_tasks.
-- Performanse & naming fixes.
-- Readme fixes.
 
-# [1.0.5] - missed
-- Performanse & naming fixes.
-
-# [1.0.4] - missed
-- WorkerTaskCourier.added bulk_return_task_results method & tests for it.
-- Renamed WorkerTaskCourier.get_tasks => WorkerTaskCourier.bulk_get_tasks.
-
-# [1.0.3] - missed
-- ClientTaskCourier.added bulk_add_tasks_to_queue method & tests for it.
-
-# [1.0.2] - missed
+# [1.1.0] - 2023-01-23 - withdrawn
 - New logic for _generate_task_id method.
 
 # [1.0.1] - 2023-01-05
