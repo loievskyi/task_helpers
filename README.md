@@ -1,6 +1,6 @@
 # Task helpers - a package for creating task helpers.
 
-[![Build](https://github.com/loievskyi/task_helpers/actions/workflows/checks.yml/badge.svg?branch=master)](https://github.com/loievskyi/task_helpers/actions/workflows/checks.yml)
+[![Build](https://github.com/loievskyi/task_helpers/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/loievskyi/task_helpers/actions/workflows/build.yml)
 [![Pypi](https://img.shields.io/pypi/v/task_helpers.svg)](https://pypi.org/project/task-helpers/)
 
 The package allows you to work with tasks.
