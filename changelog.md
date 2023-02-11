@@ -4,6 +4,9 @@
   - BaseAsyncWorker
   - ClassicAsyncWorker
 
+# [1.2.1] - 2023-02-11
+- Readme fixes
+
 # [1.2.0] - 2023-02-11
 - Added bulk operations for TaskCourier's:
   - ClientTaskCourier - added bulk_add_tasks_to_queue method & tests for it.
