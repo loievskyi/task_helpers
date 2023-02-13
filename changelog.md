@@ -1,8 +1,12 @@
-# [1.3.0] - 2023-02-11
+# [1.3.1] - 2023-02-13
 - Added async workers & tests for themt:
   - AbstractAsyncWorker
   - BaseAsyncWorker
   - ClassicAsyncWorker
+- Added async_init & async_destroy methods for async workers
+- Added destroy method for sync workers
+
+# [1.3.0] - 2023-02-11 - withdrawn
 
 # [1.2.1] - 2023-02-11
 - Readme fixes
