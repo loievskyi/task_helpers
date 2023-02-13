@@ -8,7 +8,7 @@ The package allows you to work with tasks.
 The idea is that it would be possible to create a task and send it for execution / processing somewhere (to the worker), without waiting for the result to be executed in the same block of code.
 Or, for example, different clients (from different threads) can send many tasks for processing and each wait for its own result.
 
-## Usage example. Base worker
+## Usage example. BaseWorker
 ```bash
 # Run redis (This can be done in many ways, not necessarily through docker):
 docker run -p 6379:6379 redis
@@ -125,11 +125,17 @@ A worker that can process many tasks in one iteration. (This can be useful if ta
 - wait_for_tasks - waits for tasks in the queue, pops and returns them;
 - perform_tasks - method for processing tasks. Should return a list of tasks.
 - perform_single_task - abstract method for processing one task. Should return the result of the task. Not used if the "perform_tasks" method is overridden.
-- return_task_results - method method for sending task results to the clients.
+- return_task_results - method for sending task results to the clients.
+- destroy - method for destroy objects after performing (requests.Session().close, for example)
 - perform - the main method that starts the task worker. total_iterations argument are required (how many processing iterations the worker should do.)
 
 ### BaseAsyncWorker methods:
-The same as in BaseWorker, but the methods are asynchronous and have slightly different logic inside.
+- async_init - aync init method for initialization async objects (aiohttp.ClientSession, for example).
+- async_destroy - async destroy method for destroy async objects (aiohttp.ClientSession().close, for example).
+
+The other methods are similar to the BaseWorker methods, but they are asynchronous and have slightly different logic inside:
+- New task iteration start after starting previous "perform_tasks" method
+(Not after its completion, as it was in the synchronous BaseWorker).
 
 ### ClassicWorker & ClassicAsyncWorker
 Сlassic worker, where the task is a tuple: (task_id, task_data).
@@ -149,3 +155,118 @@ task is a tuple: (task_id, task_data).
 task_data is a dictionary with keys "function", "args" and "kwargs".
 Calls a function asynchronously, with args "args" and kwargs "kwargs", unpacking them, and returns the execution result.
 Arguments "args" and "kwargs" are optional. If the function is not asynchronous, will be called in "loop.run_in_executor" method.
+
+## One more usage example. BaseAsyncWorker
+```bash
+# Run redis (This can be done in many ways, not necessarily through docker):
+docker run -p 6379:6379 redis
+```
+
+### Client side:
+```python3
+import time
+import redis
+import requests
+
+from task_helpers.couriers.redis import RedisClientTaskCourier
+
+task_courier = RedisClientTaskCourier(redis_connection=redis.Redis())
+QUEUE_NAME = "async_data_downloading"
+
+
+def download_with_async_worker(urls: list):
+    # Adding a task to the queue.
+    task_ids = task_courier.bulk_add_tasks_to_queue(
+        queue_name=QUEUE_NAME,
+        tasks_data=urls)
+
+    # waiting for the task to complete in the worker.
+    for task_id in task_ids:
+        downloaded_data = task_courier.wait_for_task_result(
+            queue_name=QUEUE_NAME,
+            task_id=task_id)
+        if isinstance(downloaded_data, dict):
+            yield downloaded_data["name"]
+        else:
+            yield downloaded_data.exception
+
+
+def download_with_sync_session(urls: list):
+    with requests.Session() as session:
+        for url in urls:
+            yield session.get(url)
+
+
+if __name__ == "__main__":
+    # Many clients can add tasks to the queue at the same time.
+    urls = [f"https://pokeapi.co/api/v2/pokemon/{num}/" for num in range(100)]
+
+    # async worker
+    # Цaiting for the worker to start so that the execution time is correct.
+    list(download_with_async_worker(urls=urls[:1]))
+
+    before_time = time.perf_counter()
+    names = list(download_with_async_worker(urls=urls))
+    after_time = time.perf_counter()
+    print(f"names: {names} \n")
+    print(f"Time for downloading {len(names)} urls with async worker: "
+          f"{after_time-before_time} sec.")
+
+    # sync session
+    before_time = time.perf_counter()
+    names = list(download_with_sync_session(urls=urls))
+    after_time = time.perf_counter()
+    print(f"Time for downloading {len(names)} urls with requests.session: "
+          f"{after_time-before_time} sec.")
+
+```
+
+### Worker side:
+```python3
+import redis
+import asyncio
+import aiohttp
+
+from task_helpers.couriers.redis import RedisWorkerTaskCourier
+from task_helpers.workers.base_async import BaseAsyncWorker
+
+task_courier = RedisWorkerTaskCourier(redis_connection=redis.Redis())
+QUEUE_NAME = "async_data_downloading"
+
+
+class AsyncDownloadingWorker(BaseAsyncWorker):
+    queue_name = QUEUE_NAME
+    empty_queue_sleep_time = 0.01
+
+    async def async_init(self):
+        self.async_session = aiohttp.ClientSession()
+
+    async def async_destroy(self):
+        await self.async_session.close()
+
+    async def download(self, url):
+        print(f"Start downloading {url}")
+        async with self.async_session.get(url) as response:
+            if response.status == 200:
+                response_json = await response.json()
+                print(f"Downloaded. Status: {response.status}. Url: {url}")
+                return response_json
+            elif response.status == 404:
+                print(f"Predownloaded. Status: {response.status}. Url: {url}")
+                raise Exception(404)
+            else:
+                await asyncio.sleep(0.1)
+                return await self.download(url)
+
+    async def perform_single_task(self, task):
+        task_id, task_data = task
+        return await self.download(url=task_data)
+
+
+if __name__ == "__main__":
+    worker = AsyncDownloadingWorker(task_courier=task_courier)
+    asyncio.run(
+        worker.perform(total_iterations=10_000)
+    )
+
+```
