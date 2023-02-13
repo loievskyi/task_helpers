@@ -651,7 +651,3 @@ class RedisClientWorkerTaskCourierTestCase(
         courier = RedisClientTaskCourier(self.task_courier.redis_connection)
         self.assertEqual(courier.redis_connection,
                          self.task_courier.redis_connection)
-
-
-if __name__ == "__main__":
-    unittest.main()

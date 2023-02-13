@@ -131,7 +131,8 @@ class BaseAsyncWorkerTestCase(RedisSetupMixin, unittest.TestCase):
         output_task_id, output_task_data = output_tasks[1]
         self.assertEqual(input_task_id, output_task_id)
         self.assertEqual(type(output_task_data), exceptions.PerformTaskError)
-        self.assertEqual(type(output_task_data.exception), self.CustomException)
+        self.assertEqual(type(output_task_data.exception),
+                         self.CustomException)
         self.assertEqual(output_task_data.exception.text, "new custom ex text")
 
         # third task
@@ -167,6 +168,7 @@ class BaseAsyncWorkerTestCase(RedisSetupMixin, unittest.TestCase):
     perform_single_task
     ===========================================================================
     """
+
     def test_perform_single_task(self):
         with self.assertRaises(expected_exception=NotImplementedError):
             task = (uuid.uuid1(), "task_data")
@@ -431,6 +433,55 @@ class BaseAsyncWorkerTestCase(RedisSetupMixin, unittest.TestCase):
         after_time = time.perf_counter()
         self.assertGreater(after_time - before_time, 1)
         self.assertLess(after_time - before_time, 2)
+
+        for task_id, task_data in input_tasks:
+            exists_task_result = self.task_courier.check_for_done(
+                queue_name=queue_name,
+                task_id=task_id)
+            task_result = self.task_courier.get_task_result(
+                queue_name=queue_name,
+                task_id=task_id)
+
+            self.assertTrue(exists_task_result)
+            self.assertEqual(task_result, str(task_data) + "text")
+
+    def test_max_tasks_sleep_time_on_perform(self):
+        queue_name = "test_perform_if_no_exception"
+        tasks_data = [
+            "test_task_data_0",  # 1 sec
+            "test_task_data_1",
+            "test_task_data_2",
+
+            "test_task_data_3",  # 1 sec
+            "test_task_data_4",
+            "test_task_data_5",
+
+            "test_task_data_6",  # 1 sec
+        ]
+
+        input_tasks = []
+        for task_data in tasks_data:
+            task_id = self.task_courier.add_task_to_queue(
+                queue_name=queue_name,
+                task_data=task_data)
+            input_tasks.append((task_id, task_data))
+
+        # monkey patching
+        self.worker.perform_single_task = \
+            self.perform_single_task_await_monkeypatching
+        self.worker.queue_name = queue_name
+        self.worker.needs_result_returning = True
+        self.worker.max_tasks_per_iteration = 1
+        self.worker.max_simultaneous_tasks = 3
+        self.worker.max_tasks_sleep_time = 0.1
+
+        before_time = time.perf_counter()
+        asyncio.run(
+            self.worker.perform(total_iterations=7)
+        )
+        after_time = time.perf_counter()
+        self.assertGreater(after_time - before_time, 3)
+        self.assertLess(after_time - before_time, 4)
 
         for task_id, task_data in input_tasks:
             exists_task_result = self.task_courier.check_for_done(

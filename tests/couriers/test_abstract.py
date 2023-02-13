@@ -77,6 +77,14 @@ class AbstractWorkerTaskCourierTestCase(unittest.TestCase):
                 task_id=uuid.uuid1(),
                 task_result="task_result")
 
+    def test_bulk_return_task_results(self):
+        with self.assertRaises(expected_exception=NotImplementedError):
+            task = (uuid.uuid1(), "task_result")
+            self.task_courier.bulk_return_task_results(
+                queue_name="queue_name",
+                tasks=[task]
+            )
+
 
 class AbstractClientWorkerTaskCourierTestCase(
         AbstractClientTaskCourierTestCase,
