@@ -117,7 +117,8 @@ class BaseWorkerTestCase(RedisSetupMixin, unittest.TestCase):
         output_task_id, output_task_data = output_tasks[1]
         self.assertEqual(input_task_id, output_task_id)
         self.assertEqual(type(output_task_data), exceptions.PerformTaskError)
-        self.assertEqual(type(output_task_data.exception), self.CustomException)
+        self.assertEqual(type(output_task_data.exception),
+                         self.CustomException)
         self.assertEqual(output_task_data.exception.text, "new custom ex text")
 
         # third task
@@ -151,6 +152,7 @@ class BaseWorkerTestCase(RedisSetupMixin, unittest.TestCase):
     perform_single_task
     ===========================================================================
     """
+
     def test_perform_single_task(self):
         with self.assertRaises(expected_exception=NotImplementedError):
             self.worker.perform_single_task(task=(uuid.uuid1(), "task_data"))
@@ -186,6 +188,35 @@ class BaseWorkerTestCase(RedisSetupMixin, unittest.TestCase):
 
         self.assertTrue(exists_task_result)
         self.assertEqual(task_result, str(task_data))
+
+    """
+    ===========================================================================
+    destroy
+    ===========================================================================
+    """
+
+    def destroy_monkeypatching(self):
+        delattr(self, "test_field")
+
+    def test_destroy(self):
+        # monkey patching
+        self.worker.destroy = self.destroy_monkeypatching
+        self.worker.test_field = "new_text"
+
+        self.assertTrue(hasattr(self.worker, "test_field"))
+        self.worker.destroy()
+
+        self.assertFalse(hasattr(self.worker, "test_field"))
+
+    def test_destroy_on_perform(self):
+        # monkey patching
+        self.worker.destroy = self.destroy_monkeypatching
+        self.worker.test_field = "new_text"
+
+        self.assertTrue(hasattr(self.worker, "test_field"))
+        self.worker.perform(total_iterations=0)
+
+        self.assertFalse(hasattr(self.worker, "test_field"))
 
     """
     ===========================================================================

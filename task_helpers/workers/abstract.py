@@ -37,6 +37,14 @@ class AbstractWorker:
         """
         raise NotImplementedError
 
+    def destroy(self):
+        """
+        Abstract destroy method for destroy objects after performing.
+        (requests.Session().close, for example).
+        Calls at the end of the "perform" method.
+        """
+        raise NotImplementedError
+
     def perform(self, total_iterations: int) -> None:
         """
         Abstract method for starting a worker.

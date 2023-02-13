@@ -87,6 +87,14 @@ class BaseWorker(AbstractWorker):
             tasks=tasks,
         )
 
+    def destroy(self):
+        """
+        Destroy method for destroy objects after performing.
+        (requests.Session().close, for example).
+        Calls at the end of the "perform" method.
+        """
+        pass
+
     def perform(self, total_iterations):
         """
         The main method that starts the task worker.
@@ -111,3 +119,5 @@ class BaseWorker(AbstractWorker):
             if self.needs_result_returning:
                 self.return_task_results(tasks=output_tasks)
             time.sleep(self.after_iteration_sleep_time)
+
+        self.destroy()
