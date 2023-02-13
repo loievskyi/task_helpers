@@ -2,10 +2,10 @@ version: "3.9"
 services:
 
   python_test:
+    container_name: task_helpers_python_test
     build: .
     volumes:
       - ./htmlcov:/code/htmlcov
-      - ./coverage.xml:/code/coverage.xml
     restart: "no"
     command:
       - /bin/sh
@@ -22,6 +22,7 @@ services:
       - REDIS_DB=0
 
   redis_test:
+    container_name: task_helpers_redis_test
     image: redis
     restart: "no"
     command: redis-server --loglevel warning

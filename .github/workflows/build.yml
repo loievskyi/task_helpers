@@ -13,10 +13,13 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v3
 
-      - name: run tests via docker-compose
+      - name: Run tests via docker-compose
         run: docker-compose up --exit-code-from python_test --abort-on-container-exit
 
-      - name: down docker containers
+      - name: Copy coverage report from container
+        run: docker cp task_helpers_python_test:/code/coverage.xml ./coverage.xml
+
+      - name: Down docker containers
         run: docker-compose down
 
       - name: Upload coverage reports to Codecov
