@@ -5,6 +5,7 @@ services:
     build: .
     volumes:
       - ./htmlcov:/code/htmlcov
+      - ./coverage.xml:/code/coverage.xml
     restart: "no"
     command:
       - /bin/sh
@@ -12,6 +13,7 @@ services:
       - |
         coverage run -m unittest
         coverage html
+        coverage xml
     depends_on:
       - "redis_test"
     environment:
