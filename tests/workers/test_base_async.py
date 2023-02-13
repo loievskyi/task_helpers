@@ -212,6 +212,73 @@ class BaseAsyncWorkerTestCase(RedisSetupMixin, unittest.TestCase):
 
     """
     ===========================================================================
+    async_init
+    ===========================================================================
+    """
+
+    async def async_init_monkeypatching(self):
+        self.test_field = "new_text"
+
+    def test_async_init(self):
+
+        # monkey patching
+        self.worker.async_init = self.async_init_monkeypatching
+
+        self.assertFalse(hasattr(self.worker, "test_field"))
+        asyncio.run(
+            self.worker.async_init()
+        )
+
+        self.assertTrue(hasattr(self.worker, "test_field"))
+        self.assertEqual(self.workerf.test_field, "new_text")
+
+    def test_async_init_on_perform(self):
+        # monkey patching
+        self.worker.async_init = self.async_init_monkeypatching
+
+        self.assertFalse(hasattr(self.worker, "test_field"))
+        asyncio.run(
+            self.worker.perform(total_iterations=0)
+        )
+
+        self.assertTrue(hasattr(self.worker, "test_field"))
+        self.assertEqual(self.workerf.test_field, "new_text")
+
+    """
+    ===========================================================================
+    async_destroy
+    ===========================================================================
+    """
+
+    async def async_destroy_monkeypatching(self):
+        delattr(self, "test_field")
+
+    def test_async_destroy(self):
+        # monkey patching
+        self.worker.async_destroy = self.async_destroy_monkeypatching
+        self.worker.test_field = "new_text"
+
+        self.assertTrue(hasattr(self.worker, "test_field"))
+        asyncio.run(
+            self.worker.async_destroy()
+        )
+
+        self.assertFalse(hasattr(self.worker, "test_field"))
+
+    def test_async_destroy_on_perform(self):
+        # monkey patching
+        self.worker.async_destroy = self.async_destroy_monkeypatching
+        self.worker.test_field = "new_text"
+
+        self.assertTrue(hasattr(self.worker, "test_field"))
+        asyncio.run(
+            self.worker.perform(total_iterations=0)
+        )
+
+        self.assertFalse(hasattr(self.worker, "test_field"))
+
+    """
+    ===========================================================================
     perform
     ===========================================================================
     """

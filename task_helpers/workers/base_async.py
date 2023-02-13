@@ -91,6 +91,22 @@ class BaseAsyncWorker(AbstractAsyncWorker):
             tasks=tasks,
         )
 
+    async def async_init(self):
+        """
+        Aync init method for initialization async objects
+        (aiohttp.ClientSession, for example).
+        Calls at the beginning of the "perform" method.
+        """
+        pass
+
+    async def async_destroy(self):
+        """
+        Async destroy method for destroy async objects
+        (aiohttp.ClientSession().close, for example).
+        Calls at the end of the "perform" method.
+        """
+        pass
+
     async def _async_perform_inner(self, input_tasks):
         try:
             output_tasks = await self.perform_tasks(tasks=input_tasks)
@@ -121,6 +137,8 @@ class BaseAsyncWorker(AbstractAsyncWorker):
 
         - total_iterations - how many iterations should the worker perform.
         """
+        await self.async_init()
+
         for num_task in range(total_iterations):
             while len(self.perform_tasks_coros) >= self.max_simultaneous_tasks:
                 await asyncio.sleep(self.max_tasks_sleep_time)
@@ -131,3 +149,5 @@ class BaseAsyncWorker(AbstractAsyncWorker):
 
         while len(self.perform_tasks_coros) > 0:
             await asyncio.sleep(self.after_iteration_sleep_time)
+
+        await self.async_destroy()

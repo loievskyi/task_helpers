@@ -30,6 +30,22 @@ class AbstractAsyncWorker:
         """
         raise NotImplementedError
 
+    async def async_init(self):
+        """
+        Abstract aync init method for initialization async objects
+        (aiohttp.ClientSession, for example).
+        Calls at the beginning of the "perform" method.
+        """
+        raise NotImplementedError
+
+    async def async_destroy(self):
+        """
+        Abstract async destroy method for destroy async objects
+        (aiohttp.ClientSession().close, for example).
+        Calls at the end of the "perform" method.
+        """
+        raise NotImplementedError
+
     async def return_task_results(self, tasks: List[Tuple]) -> Awaitable[None]:
         """
         Abstract method for returning task results. Tasks like:

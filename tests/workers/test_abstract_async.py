@@ -39,6 +39,18 @@ class AbstractAsyncWorkerTestCadse(unittest.TestCase):
                     tasks=[(uuid.uuid1(), "task_result")])
             )
 
+    def test_async_init(self):
+        with self.assertRaises(expected_exception=NotImplementedError):
+            asyncio.run(
+                self.worker.test_async_init()
+            )
+
+    def test_async_destroy(self):
+        with self.assertRaises(expected_exception=NotImplementedError):
+            asyncio.run(
+                self.worker.test_async_destroy()
+            )
+
     def test_perform(self):
         with self.assertRaises(expected_exception=NotImplementedError):
             asyncio.run(
