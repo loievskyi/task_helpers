@@ -62,6 +62,7 @@ QUEUE_NAME = "bulk_data_saving"
 
 class BulkSaveWorker(BaseWorker):
     queue_name = QUEUE_NAME
+    max_tasks_per_iteration = 500
 
     def bulk_saving_plug(self, tasks):
         for task_id, task_data in tasks:
@@ -117,6 +118,7 @@ The workers module is intended for executing and processing tasks.
 
 ### BaseWorker & BaseAsyncWorker
 A worker that can process many tasks in one iteration. (This can be useful if task_data are objects on which some operations can be done in bulk)
+#### On BaseAsyncWorker.max_tasks_per_iteration default value is 1. If you want to process many tasks (similar to a BaseWorker), change the value of this field in the inherited class.
 
 ### BaseWorker methods:
 - wait_for_tasks - waits for tasks in the queue, pops and returns them;
@@ -126,7 +128,7 @@ A worker that can process many tasks in one iteration. (This can be useful if ta
 - perform - the main method that starts the task worker. total_iterations argument are required (how many processing iterations the worker should do.)
 
 ### BaseAsyncWorker methods:
-The same, but the methods are asynchronous and have slightly different logic inside.
+The same as in BaseWorker, but the methods are asynchronous and have slightly different logic inside.
 
 ### ClassicWorker & ClassicAsyncWorker
 Сlassic worker, where the task is a tuple: (task_id, task_data).
