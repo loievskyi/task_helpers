@@ -1,7 +1,8 @@
 # Task helpers - a package for creating task helpers.
 
-[![Build](https://github.com/loievskyi/task_helpers/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/loievskyi/task_helpers/actions/workflows/build.yml)
-[![Pypi](https://img.shields.io/pypi/v/task_helpers.svg)](https://pypi.org/project/task-helpers/)
+[![build](https://github.com/loievskyi/task_helpers/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/loievskyi/task_helpers/actions/workflows/build.yml)
+[![pypi](https://img.shields.io/pypi/v/task_helpers.svg)](https://pypi.org/project/task-helpers/)
+[![coverage](https://img.shields.io/codecov/c/github/loievskyi/task_helpers/master.svg)](https://codecov.io/github/loievskyi/task_helpers?branch=master)
 
 The package allows you to work with tasks.
 The idea is that it would be possible to create a task and send it for execution / processing somewhere (to the worker), without waiting for the result to be executed in the same block of code.
