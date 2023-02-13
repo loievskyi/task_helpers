@@ -217,7 +217,7 @@ class BaseAsyncWorkerTestCase(RedisSetupMixin, unittest.TestCase):
     """
 
     async def async_init_monkeypatching(self):
-        self.test_field = "new_text"
+        self.worker.test_field = "new_text"
 
     def test_async_init(self):
 
@@ -230,7 +230,7 @@ class BaseAsyncWorkerTestCase(RedisSetupMixin, unittest.TestCase):
         )
 
         self.assertTrue(hasattr(self.worker, "test_field"))
-        self.assertEqual(self.workerf.test_field, "new_text")
+        self.assertEqual(self.worker.test_field, "new_text")
 
     def test_async_init_on_perform(self):
         # monkey patching
@@ -242,7 +242,7 @@ class BaseAsyncWorkerTestCase(RedisSetupMixin, unittest.TestCase):
         )
 
         self.assertTrue(hasattr(self.worker, "test_field"))
-        self.assertEqual(self.workerf.test_field, "new_text")
+        self.assertEqual(self.worker.test_field, "new_text")
 
     """
     ===========================================================================
@@ -251,7 +251,7 @@ class BaseAsyncWorkerTestCase(RedisSetupMixin, unittest.TestCase):
     """
 
     async def async_destroy_monkeypatching(self):
-        delattr(self, "test_field")
+        delattr(self.worker, "test_field")
 
     def test_async_destroy(self):
         # monkey patching

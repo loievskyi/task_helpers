@@ -42,13 +42,13 @@ class AbstractAsyncWorkerTestCadse(unittest.TestCase):
     def test_async_init(self):
         with self.assertRaises(expected_exception=NotImplementedError):
             asyncio.run(
-                self.worker.test_async_init()
+                self.worker.async_init()
             )
 
     def test_async_destroy(self):
         with self.assertRaises(expected_exception=NotImplementedError):
             asyncio.run(
-                self.worker.test_async_destroy()
+                self.worker.async_destroy()
             )
 
     def test_perform(self):

@@ -196,7 +196,7 @@ class BaseWorkerTestCase(RedisSetupMixin, unittest.TestCase):
     """
 
     def destroy_monkeypatching(self):
-        delattr(self, "test_field")
+        delattr(self.worker, "test_field")
 
     def test_destroy(self):
         # monkey patching
