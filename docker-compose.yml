@@ -3,8 +3,15 @@ services:
 
   python_test:
     build: .
+    volumes:
+      - ./htmlcov:/code/htmlcov
     restart: "no"
-    command: coverage run -m unittest
+    command:
+      - /bin/sh
+      - -c
+      - |
+        coverage run -m unittest
+        coverage html
     depends_on:
       - "redis_test"
     environment:
