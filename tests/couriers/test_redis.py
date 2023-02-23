@@ -68,9 +68,11 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         pass
 
     def test___init__(self):
-        courier = RedisClientTaskCourier(self.task_courier.redis_connection)
+        courier = RedisClientTaskCourier(self.task_courier.redis_connection,
+                                         test_variable="test_variable_data")
         self.assertEqual(courier.redis_connection,
                          self.task_courier.redis_connection)
+        self.assertEqual(courier.test_variable, "test_variable_data")
 
     def test__generate_task_id(self):
         self.assertFalse(hasattr(self.task_courier, "_uuid1_is_safe"))
@@ -408,9 +410,11 @@ class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         pass
 
     def test___init__(self):
-        courier = RedisClientTaskCourier(self.task_courier.redis_connection)
+        courier = RedisWorkerTaskCourier(self.task_courier.redis_connection,
+                                         test_variable="test_variable_data")
         self.assertEqual(courier.redis_connection,
                          self.task_courier.redis_connection)
+        self.assertEqual(courier.test_variable, "test_variable_data")
 
     def test_return_task_result(self):
         queue_name = "test_queue"
@@ -648,6 +652,9 @@ class RedisClientWorkerTaskCourierTestCase(
             redis_connection=self.redis_connection)
 
     def test___init__(self):
-        courier = RedisClientTaskCourier(self.task_courier.redis_connection)
+        courier = RedisClientWorkerTaskCourier(
+            self.task_courier.redis_connection,
+            test_variable="test_variable_data")
         self.assertEqual(courier.redis_connection,
                          self.task_courier.redis_connection)
+        self.assertEqual(courier.test_variable, "test_variable_data")

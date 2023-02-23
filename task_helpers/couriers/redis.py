@@ -52,8 +52,10 @@ class RedisClientTaskCourier(FullQueueNameMixin, AbstractClientTaskCourier):
 
     refresh_timeout = 0.1
 
-    def __init__(self, redis_connection):
+    def __init__(self, redis_connection, **kwargs):
         self.redis_connection = redis_connection
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     def _generate_task_id(self):
         if not hasattr(self, "_uuid1_is_safe"):
@@ -176,8 +178,10 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, AbstractWorkerTaskCourier):
 
     result_timeout = 600  # Set None to keep task_result permanently.
 
-    def __init__(self, redis_connection):
+    def __init__(self, redis_connection, **kwargs):
         self.redis_connection = redis_connection
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     def get_task(self, queue_name):
         """Pops one task from the queue and returns it.
