@@ -1,3 +1,7 @@
+# [1.3.2] - 2023-02-23
+- Changes on redis courier init method: added **kwargs (to assign them to an instance)
+
+
 # [1.3.1] - 2023-02-13
 - Added async workers & tests for themt:
   - AbstractAsyncWorker
