@@ -1,6 +1,7 @@
 import os
 
 import redis
+import redis.asyncio as aioredis
 
 
 class RedisSetupMixin:
@@ -18,9 +19,18 @@ class RedisSetupMixin:
         assert redis_port is not None, "redis_port is None"
         assert redis_db is not None, "redis_db is None"
 
-        self.redis_connection = redis.Redis(
+        redis_connection = redis.Redis(
             host=redis_host,
             port=redis_port,
             db=redis_db,
             password=redis_password)
+
+        aioredis_connection = aioredis.Redis(
+            host=redis_host,
+            port=redis_port,
+            db=redis_db,
+            password=redis_password)
+
+        self.redis_connection = redis_connection
+        self.aioredis_connection = aioredis_connection
         self.redis_connection.flushdb()
