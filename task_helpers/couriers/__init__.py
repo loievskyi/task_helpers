@@ -3,3 +3,9 @@ from .redis import (
     RedisWorkerTaskCourier,
     RedisClientWorkerTaskCourier,
 )
+
+from .redis_async import (
+    RedisAsyncClientTaskCourier,
+    RedisAsyncWorkerTaskCourier,
+    RedisAsyncClientWorkerTaskCourier,
+)
