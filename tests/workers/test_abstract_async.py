@@ -14,10 +14,12 @@ class AbstractAsyncWorkerTestCadse(unittest.TestCase):
     def setUp(self):
         super().setUp()
         self.async_task_courier = AbstractAsyncWorkerTaskCourier()
-        self.worker = AbstractAsyncWorker(async_task_courier=self.async_task_courier)
+        self.worker = AbstractAsyncWorker(
+            async_task_courier=self.async_task_courier)
 
     def test___init__(self):
-        worker = AbstractAsyncWorker(async_task_courier=self.async_task_courier)
+        worker = AbstractAsyncWorker(
+            async_task_courier=self.async_task_courier)
         self.assertIsInstance(worker, AbstractAsyncWorker)
 
     def test_wait_for_tasks(self):
