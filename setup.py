@@ -9,7 +9,7 @@ def read_file(file_path):
 
 setup(
     name="task_helpers",
-    version="1.3.2",
+    version="1.4.0",
     url="https://github.com/loievskyi/task_helpers",
     license="BSD",
     description="A package for creating task helpers.",
@@ -35,6 +35,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Topic :: Internet",
         "Topic :: Software Development",
         "Topic :: Software Development :: Libraries :: Application Frameworks",
