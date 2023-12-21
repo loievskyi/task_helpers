@@ -4,9 +4,11 @@
 [![pypi](https://img.shields.io/pypi/v/task_helpers.svg)](https://pypi.org/project/task-helpers/)
 [![coverage](https://img.shields.io/codecov/c/github/loievskyi/task_helpers/master.svg)](https://codecov.io/github/loievskyi/task_helpers?branch=master)
 
-The package allows you to work with tasks.
+The package allows you to work with tasks.\
 The idea is that it would be possible to create a task and send it for execution / processing somewhere (to the worker), without waiting for the result to be executed in the same block of code.
-Or, for example, different clients (from different threads) can send many tasks for processing and each wait for its own result.
+Or, for example, different clients (from different threads) can send many tasks for processing and each wait for its own result.\
+\
+For synchronous workers, synchronous couriers are used, for asynchronous workers, asynchronous couriers are used. The client can create a task from a synchronous courier. And an asynchronous worker can take a task from this queue as an asynchronous courier.
 
 ## Usage example. BaseWorker
 ```bash
@@ -97,21 +99,21 @@ pip install task_helpers
 ## The couriers module
 the couriers module is responsible for sending tasks from the worker to the client and back, as well as checking the execution status.
 
-### Client side methods (ClientTaskCourier):
+### Client side methods (ClientTaskCourier & AsyncClientTaskCourier):
 - get_task_result - returns the result of the task, if it exists.
 - wait_for_task_result - waits for the result of the task to appear, and then returns it.
 - add_task_to_queue - adds one task to the queue for processing.
 - bulk_add_tasks_to_queue - adds many tasks to the queue for processing.
 - check_for_done - сhecks if the task has completed.
 
-### Worker side methods (WorkerTaskCourier):
+### Worker side methods (WorkerTaskCourier & AsyncWorkerTaskCourier):
 - get_task - pops one task from the queue and returns it.
 - bulk_get_tasks - pops many tasks from the queue and returns them.
 - wait_for_task - Waits for a task to appear, pops it from the queue, and returns it.
 - return_task_result - returns the result of the processing of the task to the client side.
 - bulk_return_task_results - returns the results of processing multiple tasks to the client side.
 
-### ClientWorkerTaskCourier:
+### ClientWorkerTaskCourier & AsyncClientWorkerTaskCourier:
 - all of the above
 
 ## The workers module
@@ -223,14 +225,15 @@ if __name__ == "__main__":
 
 ### Worker side:
 ```python3
-import redis
+import redis.asyncio as aioredis
 import asyncio
 import aiohttp
 
-from task_helpers.couriers.redis import RedisWorkerTaskCourier
+from task_helpers.couriers.redis_async import RedisAsyncWorkerTaskCourier
 from task_helpers.workers.base_async import BaseAsyncWorker
 
-task_courier = RedisWorkerTaskCourier(redis_connection=redis.Redis())
+async_task_courier = RedisAsyncWorkerTaskCourier(
+    aioredis_connection=aioredis.Redis())
 QUEUE_NAME = "async_data_downloading"
 
 
@@ -264,7 +267,7 @@ class AsyncDownloadingWorker(BaseAsyncWorker):
 
 
 if __name__ == "__main__":
-    worker = AsyncDownloadingWorker(task_courier=task_courier)
+    worker = AsyncDownloadingWorker(async_task_courier=async_task_courier)
     asyncio.run(
         worker.perform(total_iterations=10_000)
     )
