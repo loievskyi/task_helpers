@@ -6,6 +6,7 @@ import time
 import timeout_decorator
 
 from task_helpers.couriers.redis import RedisClientWorkerTaskCourier
+from task_helpers.couriers.redis_async import RedisAsyncClientWorkerTaskCourier
 from task_helpers.workers.base_async import BaseAsyncWorker
 from task_helpers import exceptions
 from ..mixins import RedisSetupMixin
@@ -20,7 +21,10 @@ class BaseAsyncWorkerTestCase(RedisSetupMixin, unittest.TestCase):
         super().setUp()
         self.queue_name = "test_queue_name"
         self.task_courier = RedisClientWorkerTaskCourier(self.redis_connection)
-        self.worker = BaseAsyncWorker(task_courier=self.task_courier)
+        self.async_task_courier = RedisAsyncClientWorkerTaskCourier(
+            self.aioredis_connection)
+        self.worker = BaseAsyncWorker(
+            async_task_courier=self.async_task_courier)
 
         # monkey patching
         self.worker.queue_name = self.queue_name
@@ -62,10 +66,10 @@ class BaseAsyncWorkerTestCase(RedisSetupMixin, unittest.TestCase):
     """
 
     def test___init__(self):
-        worker = BaseAsyncWorker(task_courier=self.task_courier,
+        worker = BaseAsyncWorker(async_task_courier=self.async_task_courier,
                                  max_tasks_per_iteration=5,
                                  test_variable="test_variable_data")
-        self.assertEqual(worker.task_courier, self.task_courier)
+        self.assertEqual(worker.async_task_courier, self.async_task_courier)
         self.assertEqual(worker.max_tasks_per_iteration, 5)
         self.assertEqual(worker.test_variable, "test_variable_data")
 
