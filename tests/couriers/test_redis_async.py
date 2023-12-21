@@ -9,7 +9,7 @@ import redis
 import timeout_decorator
 
 from task_helpers.couriers.redis_async import (
-    FullQueueNameMixin,
+    AsyncFullQueueNameMixin,
     RedisAsyncClientTaskCourier,
     RedisAsyncWorkerTaskCourier,
     RedisAsyncClientWorkerTaskCourier,
@@ -22,13 +22,13 @@ class TimeoutTestException(TimeoutError):
     pass
 
 
-class FullQueueNameMixinTestCase(unittest.TestCase):
+class AsyncFullQueueNameMixinTestCase(unittest.TestCase):
     """
     Tests to make sure that _get_full_queue_name is calculating correctly.
     """
 
     def setUp(self):
-        self.mixin = FullQueueNameMixin()
+        self.mixin = AsyncFullQueueNameMixin()
 
     def test_get_full_queue_name_with_prefix(self):
         self.mixin.prefix_queue = "test_prefix"

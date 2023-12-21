@@ -12,14 +12,14 @@ from .abstract_async import (
 from .. import exceptions
 
 __all__ = [
-    "FullQueueNameMixin",
+    "AsyncFullQueueNameMixin",
     "RedisAsyncClientTaskCourier",
     "RedisAsyncWorkerTaskCourier",
     "RedisAsyncClientWorkerTaskCourier",
 ]
 
 
-class FullQueueNameMixin:
+class AsyncFullQueueNameMixin:
     """
     Returns full_queue_name (with prefix & sufix, like "pending")
     profides _get_full_queue_name method.
@@ -38,7 +38,7 @@ class FullQueueNameMixin:
 
 
 class RedisAsyncClientTaskCourier(
-        FullQueueNameMixin, AbstractAsyncClientTaskCourier):
+        AsyncFullQueueNameMixin, AbstractAsyncClientTaskCourier):
     """
     Class for the client side of task helpers using redis.
 
@@ -164,7 +164,7 @@ class RedisAsyncClientTaskCourier(
 
 
 class RedisAsyncWorkerTaskCourier(
-        FullQueueNameMixin, AbstractAsyncWorkerTaskCourier):
+        AsyncFullQueueNameMixin, AbstractAsyncWorkerTaskCourier):
     """
     Class for the worker side of task helpers using redis.
 
