@@ -17,6 +17,10 @@ from task_helpers import exceptions
 from ..mixins import RedisSetupMixin
 
 
+class TimeoutTestException(TimeoutError):
+    pass
+
+
 class FullQueueNameMixinTestCase(unittest.TestCase):
     """
     Tests to make sure that _get_full_queue_name is calculating correctly.
@@ -63,9 +67,6 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         super().setUp()
         self.task_courier = RedisClientTaskCourier(
             redis_connection=self.redis_connection)
-
-    class TimeoutTestException(TimeoutError):
-        pass
 
     def test___init__(self):
         courier = RedisClientTaskCourier(self.task_courier.redis_connection,
@@ -293,7 +294,7 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
     def test_wait_for_task_result_if_timeout_is_None(self):
         before_task_id = uuid.uuid1()
         supposed_exceptions = (
-            self.TimeoutTestException, redis.exceptions.TimeoutError)
+            TimeoutTestException, redis.exceptions.TimeoutError)
         with self.assertRaises(supposed_exceptions) as context:
             self.task_courier.wait_for_task_result(
                 queue_name="test_queue_name",
@@ -406,9 +407,6 @@ class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         self.task_courier = RedisWorkerTaskCourier(
             redis_connection=self.redis_connection)
 
-    class TimeoutTestException(TimeoutError):
-        pass
-
     def test___init__(self):
         courier = RedisWorkerTaskCourier(self.task_courier.redis_connection,
                                          test_variable="test_variable_data")
@@ -503,7 +501,7 @@ class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
     def test_wait_for_task_if_timeout_is_None(self):
         queue_name = "test_queue_name"
         supposed_exceptions = (
-            self.TimeoutTestException, redis.exceptions.TimeoutError)
+            TimeoutTestException, redis.exceptions.TimeoutError)
         with self.assertRaises(supposed_exceptions) as context:
             self.task_courier.wait_for_task(
                 queue_name=queue_name,

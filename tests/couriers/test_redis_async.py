@@ -18,6 +18,10 @@ from task_helpers import exceptions
 from ..mixins import RedisSetupMixin
 
 
+class TimeoutTestException(TimeoutError):
+    pass
+
+
 class FullQueueNameMixinTestCase(unittest.TestCase):
     """
     Tests to make sure that _get_full_queue_name is calculating correctly.
@@ -72,9 +76,6 @@ class RedisAsyncClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         super().setUp()
         self.async_task_courier = RedisAsyncClientTaskCourier(
             aioredis_connection=self.aioredis_connection)
-
-    class TimeoutTestException(TimeoutError):
-        pass
 
     def get_full_queue_name(self, queue_name, sufix):
         full_queue_name = queue_name
@@ -336,7 +337,7 @@ class RedisAsyncClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
     def test_wait_for_task_result_if_timeout_is_None(self):
         before_task_id = uuid.uuid1()
         supposed_exceptions = (
-            self.TimeoutTestException, redis.exceptions.TimeoutError)
+            TimeoutTestException, redis.exceptions.TimeoutError)
         with self.assertRaises(supposed_exceptions) as context:
             asyncio.run(
                 self.async_task_courier.wait_for_task_result(
@@ -465,9 +466,6 @@ class RedisAsyncWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
             aioredis_connection=self.aioredis_connection,
             redis_connection=self.redis_connection)
 
-    class TimeoutTestException(TimeoutError):
-        pass
-
     def get_full_queue_name(self, queue_name, sufix):
         full_queue_name = queue_name
         if self.async_task_courier.prefix_queue:
@@ -580,7 +578,7 @@ class RedisAsyncWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
     def test_wait_for_task_if_timeout_is_None(self):
         queue_name = "test_queue_name"
         supposed_exceptions = (
-            self.TimeoutTestException, redis.exceptions.TimeoutError)
+            TimeoutTestException, redis.exceptions.TimeoutError)
         with self.assertRaises(supposed_exceptions) as context:
             asyncio.run(
                 self.async_task_courier.wait_for_task(
@@ -753,9 +751,9 @@ class RedisAsyncClientWorkerTaskCourierTestCase(
 
     def test___init__(self):
         courier = RedisAsyncClientWorkerTaskCourier(
-            aioredis_connection=self.async_task_courier.redis_connection,
+            aioredis_connection=self.async_task_courier.aioredis_connection,
             redis_connection=self.async_task_courier.redis_connection,
             test_variable="test_variable_data")
-        self.assertEqual(courier.redis_connection,
+        self.assertEqual(courier.aioredis_connection,
                          self.async_task_courier.aioredis_connection)
         self.assertEqual(courier.test_variable, "test_variable_data")
