@@ -50,7 +50,7 @@ class AbstractAsyncClientTaskCourier(object):
         Client side method.
 
         - queue_name - queue name, used in the add_task_to_queue method.
-        - task_data - task objects, what will be added to redis qeueue."""
+        - task_data - task objects, what will be added to qeueue."""
         raise NotImplementedError
 
     async def bulk_add_tasks_to_queue(self, queue_name, tasks_data) -> List:
@@ -59,7 +59,7 @@ class AbstractAsyncClientTaskCourier(object):
         Client side method.
 
         - queue_name - queue name, used in the add_task_to_queue method.
-        - tasks_data - task objects, what will be added to redis qeueue."""
+        - tasks_data - task objects, what will be added to qeueue."""
         raise NotImplementedError
 
     async def check_for_done(self, queue_name, task_id) -> bool:

@@ -8,13 +8,13 @@ from task_helpers import exceptions
 
 class BaseAsyncWorker(AbstractAsyncWorker):
     """
-    Base class for workers.
+    Base class for async workers.
     Initialization requires an instance of async_task_courier.
     The other kwargs will override the class fields for the current instance
     of the class. They can also be overriden in an inherited class.
 
     Class fields:
-    - async_task_courier - an instance of the async_task_courier.
+    - async_task_courier - an instance of the AbstractAsyncWorkerTaskCourier.
       Specified when the class is initialized.
     - queue_name - The name of the queue from which tasks will be performed.
     - after_iteration_sleep_time - Downtime in seconds after each task is

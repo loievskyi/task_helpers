@@ -69,13 +69,14 @@ def test_func(text):
 
 class RedisAsyncClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
     """
-    Tests to make sure that RedisClientTaskCourier is working correctly.
+    Tests to make sure that RedisAsyncClientTaskCourier is working correctly.
     """
 
     def setUp(self):
         super().setUp()
         self.async_task_courier = RedisAsyncClientTaskCourier(
-            aioredis_connection=self.aioredis_connection)
+            aioredis_connection=self.aioredis_connection,
+            prefix_queue="tests")
 
     def get_full_queue_name(self, queue_name, sufix):
         full_queue_name = queue_name
@@ -457,14 +458,14 @@ class RedisAsyncClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
 
 class RedisAsyncWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
     """
-    Tests to make sure that RedisWorkerTaskCourier is working correctly.
+    Tests to make sure that RedisAsyncWorkerTaskCourier is working correctly.
     """
 
     def setUp(self):
         super().setUp()
         self.async_task_courier = RedisAsyncWorkerTaskCourier(
             aioredis_connection=self.aioredis_connection,
-            redis_connection=self.redis_connection)
+            prefix_queue="tests")
 
     def get_full_queue_name(self, queue_name, sufix):
         full_queue_name = queue_name
@@ -740,19 +741,18 @@ class RedisAsyncClientWorkerTaskCourierTestCase(
         RedisAsyncClientTaskCourierTestCase,
         RedisAsyncWorkerTaskCourierTestCase):
     """
-    Tests to make sure that RedisClientWorkerTaskCourier is working correctly.
+    Tests to make sure that RedisAsyncClientWorkerTaskCourier is working correctly.
     """
 
     def setUp(self):
         super().setUp()
         self.async_task_courier = RedisAsyncClientWorkerTaskCourier(
-            redis_connection=self.redis_connection,
-            aioredis_connection=self.aioredis_connection)
+            aioredis_connection=self.aioredis_connection,
+            prefix_queue="tests")
 
     def test___init__(self):
         courier = RedisAsyncClientWorkerTaskCourier(
             aioredis_connection=self.async_task_courier.aioredis_connection,
-            redis_connection=self.async_task_courier.redis_connection,
             test_variable="test_variable_data")
         self.assertEqual(courier.aioredis_connection,
                          self.async_task_courier.aioredis_connection)

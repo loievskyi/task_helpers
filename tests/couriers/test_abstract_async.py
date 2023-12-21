@@ -11,7 +11,7 @@ from task_helpers.couriers.abstract_async import (
 
 class AbstractAsyncClientTaskCourierTestCase(unittest.TestCase):
     """
-    Tests to make sure that AbstractClientTaskCourier is working correctly.
+    Tests to make sure that AbstractAsyncClientTaskCourier is working correctly.
     """
 
     def setUp(self):
@@ -60,7 +60,7 @@ class AbstractAsyncClientTaskCourierTestCase(unittest.TestCase):
 
 class AbstractAsyncWorkerTaskCourierTestCase(unittest.TestCase):
     """
-    Tests to make sure that AbstractWorkerTaskCourier is working correctly.
+    Tests to make sure that AbstractAsyncWorkerTaskCourier is working correctly.
     """
 
     def setUp(self):
@@ -112,7 +112,7 @@ class AbstractAsyncClientWorkerTaskCourierTestCase(
         AbstractAsyncWorkerTaskCourierTestCase,
         unittest.TestCase):
     """
-    Tests to make sure that AbstractClientWorkerTaskCourier
+    Tests to make sure that AbstractAsyncClientWorkerTaskCourier
     is working correctly.
     """
 
