@@ -3,6 +3,7 @@ import pickle
 import uuid
 import time
 import threading
+import datetime
 
 import redis
 import timeout_decorator
@@ -186,13 +187,14 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
             queue_name="test_queue_name",
             sufix="results:") + str(before_task_id)
         value = pickle.dumps(before_task_result)
-        self.redis_connection.set(name=key_name, value=value)
+        self.redis_connection.rpush(key_name, value)
 
         after_task_result = self.task_courier.get_task_result(
             queue_name="test_queue_name",
             task_id=before_task_id,
             delete_data=True)
-        redis_task_data = self.redis_connection.get(name=key_name)
+
+        redis_task_data = self.redis_connection.lpop(key_name)
 
         self.assertEqual(before_task_result, after_task_result)
         self.assertIsNone(redis_task_data)
@@ -204,13 +206,13 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
             queue_name="test_queue_name",
             sufix="results:") + str(before_task_id)
         value = pickle.dumps(before_task_result)
-        self.redis_connection.set(name=key_name, value=value)
+        self.redis_connection.rpush(key_name, value)
 
         after_task_result = self.task_courier.get_task_result(
             queue_name="test_queue_name",
             task_id=before_task_id,
             delete_data=False)
-        raw_task_data = self.redis_connection.get(name=key_name)
+        raw_task_data = self.redis_connection.lpop(key_name)
         after_task_data = pickle.loads(raw_task_data)
 
         self.assertEqual(before_task_result, after_task_result)
@@ -234,7 +236,7 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
             queue_name="test_queue_name",
             sufix="results:") + str(before_task_id)
         value = pickle.dumps(before_task_result)
-        self.redis_connection.set(name=key_name, value=value)
+        self.redis_connection.rpush(key_name, value)
 
         result = self.task_courier.get_task_result(
             queue_name="test_queue_name",
@@ -252,13 +254,13 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
             queue_name="test_queue_name",
             sufix="results:") + str(before_task_id)
         value = pickle.dumps(before_task_result)
-        self.redis_connection.set(name=key_name, value=value)
+        self.redis_connection.rpush(key_name, value)
 
         after_task_result = self.task_courier.wait_for_task_result(
             queue_name="test_queue_name",
             task_id=before_task_id,
             delete_data=True)
-        redis_task_data = self.redis_connection.get(name=key_name)
+        redis_task_data = self.redis_connection.lpop(key_name)
 
         self.assertEqual(before_task_result, after_task_result)
         self.assertIsNone(redis_task_data)
@@ -270,25 +272,33 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
             queue_name="test_queue_name",
             sufix="results:") + str(before_task_id)
         value = pickle.dumps(before_task_result)
-        self.redis_connection.set(name=key_name, value=value)
+        self.redis_connection.rpush(key_name, value)
 
         after_task_result = self.task_courier.wait_for_task_result(
             queue_name="test_queue_name",
             task_id=before_task_id,
             delete_data=False)
-        raw_task_data = self.redis_connection.get(name=key_name)
+        raw_task_data = self.redis_connection.lpop(key_name)
         after_task_data = pickle.loads(raw_task_data)
 
         self.assertEqual(before_task_result, after_task_result)
         self.assertEqual(after_task_data, before_task_result)
 
-    def test_wait_for_task_result_if_timeout(self):
+    def test_wait_for_task_result_if_timeout_type_int(self):
         before_task_id = uuid.uuid1()
         with self.assertRaises(TimeoutError):
             self.task_courier.wait_for_task_result(
                 queue_name="test_queue_name",
                 task_id=before_task_id,
                 timeout=1)
+
+    def test_wait_for_task_result_if_timeout_type_timedelta(self):
+        before_task_id = uuid.uuid1()
+        with self.assertRaises(TimeoutError):
+            self.task_courier.wait_for_task_result(
+                queue_name="test_queue_name",
+                task_id=before_task_id,
+                timeout=datetime.timedelta(seconds=1))
 
     @timeout_decorator.timeout(1, timeout_exception=TimeoutTestException)
     def test_wait_for_task_result_if_timeout_is_None(self):
@@ -305,7 +315,7 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
     def test_wait_for_task_result_wait_result(self):
         def set_result_to_redis(redis_connection, key, value, sleep_time):
             time.sleep(sleep_time)
-            redis_connection.set(key, value)
+            redis_connection.rpush(key, value)
 
         before_task_result = "test_result_123"
         before_task_id = uuid.uuid1()
@@ -343,7 +353,7 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
             queue_name="test_queue_name",
             sufix="results:") + str(before_task_id)
         value = pickle.dumps(before_task_result)
-        self.redis_connection.set(name=key_name, value=value)
+        self.redis_connection.rpush(key_name, value)
         done_status = self.task_courier.check_for_done(
             queue_name="test_queue_name",
             task_id=before_task_id)
@@ -362,7 +372,7 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
             queue_name="test_queue_name",
             sufix="results:") + str(before_task_id)
         value = pickle.dumps(before_task_result)
-        self.redis_connection.set(name=key_name, value=value)
+        self.redis_connection.rpush(key_name, value)
         done_status = self.task_courier.check_for_done(
             queue_name="test_queue_name",
             task_id=before_task_id)
@@ -386,7 +396,7 @@ class RedisClientTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
             queue_name="test_queue_name",
             sufix="results:") + str(before_task_id)
         value = pickle.dumps(before_task_result)
-        self.redis_connection.set(name=key_name, value=value)
+        self.redis_connection.rpush(key_name, value)
 
         result = self.task_courier.get_task_result(
             queue_name="test_queue_name",
@@ -427,10 +437,10 @@ class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
 
         name = self.task_courier._get_full_queue_name(
             queue_name=queue_name, sufix="results:") + str(task_id)
-        value = pickle.loads(self.redis_connection.get(name))
+        value = pickle.loads(self.redis_connection.lpop(name))
         self.assertEqual(value, task_result)
         time.sleep(2)
-        value = self.redis_connection.get(name)
+        value = self.redis_connection.lpop(name)
         self.assertIsNone(value)
 
     def test_bulk_return_task_results(self):
@@ -451,7 +461,7 @@ class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         for task_id, task_result in start_task_results:
             name = self.task_courier._get_full_queue_name(
                 queue_name=queue_name, sufix="results:") + str(task_id)
-            value = pickle.loads(self.redis_connection.get(name))
+            value = pickle.loads(self.redis_connection.lpop(name))
             self.assertEqual(value, task_result)
 
     def test_bulk_return_task_results_correct_timeout(self):
@@ -472,14 +482,14 @@ class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         for task_id, task_result in start_task_results:
             name = self.task_courier._get_full_queue_name(
                 queue_name=queue_name, sufix="results:") + str(task_id)
-            value = pickle.loads(self.redis_connection.get(name))
+            value = pickle.loads(self.redis_connection.lpop(name))
             self.assertEqual(value, task_result)
 
         time.sleep(2)
         for task_id, task_result in start_task_results:
             name = self.task_courier._get_full_queue_name(
                 queue_name=queue_name, sufix="results:") + str(task_id)
-            value = self.redis_connection.get(name)
+            value = self.redis_connection.lpop(name)
             self.assertIsNone(value, task_result)
 
     def test_wait_for_task(self):
