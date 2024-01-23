@@ -1,7 +1,6 @@
 import uuid
 import pickle
 import datetime
-import time
 
 from .abstract import (
     AbstractClientTaskCourier,
@@ -75,9 +74,9 @@ class RedisClientTaskCourier(FullQueueNameMixin, AbstractClientTaskCourier):
 
         name = self._get_full_queue_name(queue_name, "results:") + str(task_id)
         if delete_data:
-            raw_data = self.redis_connection.getdel(name=name)
+            raw_data = self.redis_connection.lpop(name)
         else:
-            raw_data = self.redis_connection.get(name=name)
+            raw_data = self.redis_connection.lmove(name, name)
         if raw_data is None:
             raise exceptions.TaskResultDoesNotExist
         return pickle.loads(raw_data)
@@ -97,20 +96,20 @@ class RedisClientTaskCourier(FullQueueNameMixin, AbstractClientTaskCourier):
           datetime.timedelta object. Default is None (wait indefinitely until
           it appears). If specified - raises TimeoutError if time is up"""
 
-        utc_start_time = datetime.datetime.utcnow()
-        if isinstance(timeout, int) or isinstance(timeout, float):
-            timeout = datetime.timedelta(seconds=timeout)
-        first_iteration = True
-        while first_iteration or not timeout or \
-                utc_start_time + timeout > datetime.datetime.utcnow():
-            try:
-                first_iteration = False
-                return self.get_task_result(
-                    queue_name=queue_name,
-                    task_id=task_id,
-                    delete_data=delete_data)
-            except exceptions.TaskResultDoesNotExist:
-                time.sleep(self.refresh_timeout)
+        if type(timeout) is datetime.timedelta:
+            timeout = timeout.total_seconds()
+        timeout = timeout or 0
+
+        name = self._get_full_queue_name(queue_name, "results:") + str(task_id)
+        if delete_data:
+            raw_data = self.redis_connection.blpop(name, timeout=timeout)
+            if raw_data:
+                raw_data = raw_data[-1]
+        else:
+            raw_data = self.redis_connection.blmove(name, name,
+                                                    timeout=timeout)
+        if raw_data is not None:
+            return pickle.loads(raw_data)
         raise TimeoutError
 
     def add_task_to_queue(self, queue_name, task_data):
@@ -249,8 +248,9 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, AbstractWorkerTaskCourier):
         name = self._get_full_queue_name(
             queue_name=queue_name, sufix="results:") + str(task_id)
         value = pickle.dumps(task_result)
-        self.redis_connection.set(name=name, value=value,
-                                  ex=self.result_timeout)
+        self.redis_connection.rpush(name, value)
+        if self.result_timeout:
+            self.redis_connection.expire(name, self.result_timeout)
 
     def bulk_return_task_results(self, queue_name, tasks):
         """returns the results of processing multiple tasks to the client side.
@@ -266,7 +266,9 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, AbstractWorkerTaskCourier):
             name = self._get_full_queue_name(
                 queue_name=queue_name, sufix="results:") + str(task_id)
             value = pickle.dumps(task_result)
-            pipeline.set(name=name, value=value, ex=self.result_timeout)
+            pipeline.rpush(name, value)
+            if self.result_timeout:
+                pipeline.expire(name, self.result_timeout)
         pipeline.execute()
 
 
