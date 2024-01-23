@@ -1,8 +1,6 @@
 import uuid
 import pickle
 import datetime
-# import time
-import asyncio
 
 from .abstract_async import (
     AbstractAsyncClientTaskCourier,
@@ -75,11 +73,12 @@ class RedisAsyncClientTaskCourier(
         - delete_data - Whether to remove data from the queue after retrieving.
           default is True."""
 
-        name = await self._get_full_queue_name(queue_name, "results:") + str(task_id)
+        name = await self._get_full_queue_name(
+            queue_name, "results:") + str(task_id)
         if delete_data:
-            raw_data = await self.aioredis_connection.execute_command("GETDEL", name)
+            raw_data = await self.aioredis_connection.lpop(name)
         else:
-            raw_data = await self.aioredis_connection.get(name=name)
+            raw_data = await self.aioredis_connection.lmove(name, name)
         if raw_data is None:
             raise exceptions.TaskResultDoesNotExist
         return pickle.loads(raw_data)
@@ -99,20 +98,22 @@ class RedisAsyncClientTaskCourier(
           datetime.timedelta object. Default is None (wait indefinitely until
           it appears). If specified - raises TimeoutError if time is up"""
 
-        utc_start_time = datetime.datetime.utcnow()
-        if isinstance(timeout, int) or isinstance(timeout, float):
-            timeout = datetime.timedelta(seconds=timeout)
-        first_iteration = True
-        while first_iteration or not timeout or \
-                utc_start_time + timeout > datetime.datetime.utcnow():
-            try:
-                first_iteration = False
-                return await self.get_task_result(
-                    queue_name=queue_name,
-                    task_id=task_id,
-                    delete_data=delete_data)
-            except exceptions.TaskResultDoesNotExist:
-                await asyncio.sleep(self.refresh_timeout)
+        if type(timeout) is datetime.timedelta:
+            timeout = timeout.total_seconds()
+        timeout = timeout or 0
+
+        name = await self._get_full_queue_name(
+            queue_name, "results:") + str(task_id)
+        if delete_data:
+            raw_data = await self.aioredis_connection.blpop(
+                name, timeout=timeout)
+            if raw_data:
+                raw_data = raw_data[-1]
+        else:
+            raw_data = await self.aioredis_connection.blmove(
+                name, name, timeout=timeout)
+        if raw_data is not None:
+            return pickle.loads(raw_data)
         raise TimeoutError
 
     async def add_task_to_queue(self, queue_name, task_data):
@@ -159,7 +160,8 @@ class RedisAsyncClientTaskCourier(
         - task_id - id of the task that the add_task_to_queue method returned.
         """
 
-        name = await self._get_full_queue_name(queue_name, "results:") + str(task_id)
+        name = await self._get_full_queue_name(queue_name, "results:") + \
+            str(task_id)
         return bool(await self.aioredis_connection.exists(name))
 
 
@@ -253,8 +255,9 @@ class RedisAsyncWorkerTaskCourier(
         name = await self._get_full_queue_name(
             queue_name=queue_name, sufix="results:") + str(task_id)
         value = pickle.dumps(task_result)
-        await self.aioredis_connection.set(name=name, value=value,
-                                           ex=self.result_timeout)
+        await self.aioredis_connection.rpush(name, value)
+        if self.result_timeout:
+            await self.aioredis_connection.expire(name, self.result_timeout)
 
     async def bulk_return_task_results(self, queue_name, tasks):
         """returns the results of processing multiple tasks to the client side.
@@ -270,7 +273,9 @@ class RedisAsyncWorkerTaskCourier(
             name = await self._get_full_queue_name(
                 queue_name=queue_name, sufix="results:") + str(task_id)
             value = pickle.dumps(task_result)
-            pipeline.set(name=name, value=value, ex=self.result_timeout)
+            pipeline.rpush(name, value)
+            if self.result_timeout:
+                pipeline.expire(name, self.result_timeout)
         await pipeline.execute()
 
 
