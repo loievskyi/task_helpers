@@ -17,8 +17,11 @@ class ClassicAsyncWorker(BaseAsyncWorker):
     - queue_name - The name of the queue from which tasks are read.
     - after_iteration_sleep_time - Downtime in seconds after each task is
       completed (e.g. 0.1). Default is 1 millisecond.
-    - return_task_result - True if needs to return the result of the
-      task execution, or False otherwise.
+    - max_tasks_per_iteration - How many tasks can be processed in 1 iteration
+      (in the perform_many_tasks method). Influences how many maximum tasks
+      will be popped from the queue.
+    - needs_result_returning - True if needs to return the result of the
+      task performing, or False otherwise.
     """
 
     max_tasks_per_iteration = 1
