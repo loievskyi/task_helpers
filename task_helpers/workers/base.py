@@ -19,8 +19,6 @@ class BaseWorker(AbstractWorker):
     - queue_name - The name of the queue from which tasks will be performed.
     - after_iteration_sleep_time - Downtime in seconds after each task is
       completed (e.g. 0.1). Default is 1 millisecond.
-    - empty_queue_sleep_time - downtime in seconds if the task queue is empty.
-      Default is 0.1 seconds.
     - max_tasks_per_iteration - How many tasks can be processed in 1 iteration
       (in the perform_many_tasks method). Influences how many maximum tasks
       will be popped from the queue.
@@ -36,6 +34,8 @@ class BaseWorker(AbstractWorker):
     needs_result_returning = True
 
     def __init__(self, task_courier: AbstractWorkerTaskCourier, **kwargs):
+        assert isinstance(task_courier, AbstractWorkerTaskCourier),\
+            "async_task_courier is not instance of AbstractWorkerTaskCourier"
         self.task_courier = task_courier
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -46,13 +46,11 @@ class BaseWorker(AbstractWorker):
         tasks depends on the self.max_tasks_per_iteration argument:
         Count of tasks = min(len_queue, self.max_tasks_per_iteration).
         """
-        while True:
-            tasks = self.task_courier.bulk_get_tasks(
-                queue_name=self.queue_name,
-                max_count=self.max_tasks_per_iteration)
-            if tasks:
-                return tasks
-            time.sleep(self.empty_queue_sleep_time)
+
+        return self.task_courier.bulk_wait_for_tasks(
+            queue_name=self.queue_name,
+            max_count=self.max_tasks_per_iteration,
+        )
 
     def perform_tasks(self, tasks):
         """
