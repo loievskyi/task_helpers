@@ -19,8 +19,6 @@ class BaseAsyncWorker(AbstractAsyncWorker):
     - queue_name - The name of the queue from which tasks will be performed.
     - after_iteration_sleep_time - Downtime in seconds after each task is
       completed (e.g. 0.1). Default is 1 millisecond.
-    - empty_queue_sleep_time - downtime in seconds if the task queue is empty.
-      Default is 0.1 seconds.
     - max_tasks_per_iteration - How many tasks can be processed in 1 iteration
       (in the perform_many_tasks method). Influences how many maximum tasks
       will be popped from the queue.
@@ -28,7 +26,7 @@ class BaseAsyncWorker(AbstractAsyncWorker):
       task performing, or False otherwise.
     """
 
-    async_task_courier: AbstractAsyncWorkerTaskCourier = None
+    task_courier: AbstractAsyncWorkerTaskCourier
     queue_name = None
     after_iteration_sleep_time = 0.001
     empty_queue_sleep_time = 0.1
@@ -42,6 +40,9 @@ class BaseAsyncWorker(AbstractAsyncWorker):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+        assert isinstance(async_task_courier, AbstractAsyncWorkerTaskCourier),\
+            "async_task_courier is not instance of " \
+            "AbstractAsyncWorkerTaskCourier"
         self.async_task_courier = async_task_courier
         self.perform_tasks_coros = set()
 
@@ -51,13 +52,11 @@ class BaseAsyncWorker(AbstractAsyncWorker):
         tasks depends on the self.max_tasks_per_iteration argument:
         Count of tasks = min(len_queue, self.max_tasks_per_iteration).
         """
-        while True:
-            tasks = await self.async_task_courier.bulk_get_tasks(
-                queue_name=self.queue_name,
-                max_count=self.max_tasks_per_iteration)
-            if tasks:
-                return tasks
-            await asyncio.sleep(self.empty_queue_sleep_time)
+
+        return await self.async_task_courier.bulk_wait_for_tasks(
+            queue_name=self.queue_name,
+            max_count=self.max_tasks_per_iteration,
+        )
 
     async def perform_tasks(self, tasks):
         """
