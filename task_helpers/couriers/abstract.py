@@ -122,6 +122,21 @@ class AbstractWorkerTaskCourier(object):
           TimeoutError if time is up"""
         raise NotImplementedError
 
+    def bulk_wait_for_tasks(self, queue_name, max_count,
+                            timeout=None) -> List[Tuple]:
+        """
+        Waits for tasks in the queue, pops and returns them.
+        Raises TimeoutError in case of timeout.
+        Worker side method.
+
+        - queue_name - queue name, used in the add_task_to_queue method.
+        - max_count - the maximum number of tasks that can be extracted from
+          the queue
+        - timeout - timeout to wait for the task in seconds. Default is None
+          (Waiting forever until it appears). If specified - raised
+          TimeoutError if time is up"""
+        raise NotImplementedError
+
     def return_task_result(self, queue_name, task_id, task_result) -> None:
         """Returns the result of the processing of the task to the client side.
         Worker side method.

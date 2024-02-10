@@ -106,8 +106,8 @@ class RedisClientTaskCourier(FullQueueNameMixin, AbstractClientTaskCourier):
             if raw_data:
                 raw_data = raw_data[-1]
         else:
-            raw_data = self.redis_connection.blmove(name, name,
-                                                    timeout=timeout)
+            raw_data = self.redis_connection.blmove(
+                name, name, timeout=timeout)
         if raw_data is not None:
             return pickle.loads(raw_data)
         raise TimeoutError
@@ -235,6 +235,28 @@ class RedisWorkerTaskCourier(FullQueueNameMixin, AbstractWorkerTaskCourier):
             raise TimeoutError
         task_id, task_data = pickle.loads(task[-1])
         return task_id, task_data
+
+    def bulk_wait_for_tasks(self, queue_name, max_count, timeout=None):
+        """
+        Waits for tasks in the queue, pops and returns them.
+        Raises TimeoutError in case of timeout.
+        Worker side method.
+
+        - queue_name - queue name, used in the add_task_to_queue method.
+        - max_count - the maximum number of tasks that can be extracted from
+          the queue
+        - timeout - timeout to wait for the task in seconds. Default is None
+          (Waiting forever until it appears). If specified - raised
+          TimeoutError if time is up"""
+
+        tasks = []
+        if max_count > 1:
+            tasks = self.bulk_get_tasks(
+                queue_name=queue_name, max_count=max_count)
+
+        if not tasks:
+            return [self.wait_for_task(queue_name=queue_name, timeout=timeout)]
+        return tasks
 
     def return_task_result(self, queue_name, task_id, task_result):
         """Returns the result of the processing of the task to the client side.

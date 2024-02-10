@@ -243,6 +243,28 @@ class RedisAsyncWorkerTaskCourier(
         task_id, task_data = pickle.loads(task[-1])
         return task_id, task_data
 
+    async def bulk_wait_for_tasks(self, queue_name, max_count, timeout=None):
+        """
+        Waits for tasks in the queue, pops and returns them.
+        Raises TimeoutError in case of timeout.
+        Worker side method.
+
+        - queue_name - queue name, used in the add_task_to_queue method.
+        - max_count - the maximum number of tasks that can be extracted from
+          the queue
+        - timeout - timeout to wait for the task in seconds. Default is None
+          (Waiting forever until it appears). If specified - raised
+          TimeoutError if time is up"""
+
+        tasks = []
+        if max_count > 1:
+            tasks = await self.bulk_get_tasks(queue_name=queue_name,
+                                              max_count=max_count)
+        if not tasks:
+            return [await self.wait_for_task(queue_name=queue_name,
+                                             timeout=timeout)]
+        return tasks
+
     async def return_task_result(self, queue_name, task_id, task_result):
         """Returns the result of the processing of the task to the client side.
         Worker side method.
