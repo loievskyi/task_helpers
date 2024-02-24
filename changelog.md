@@ -1,5 +1,17 @@
+# [1.4.1] - 2024-02-24
+- Asynchronous couriers has been added:
+  - AbstractAsyncClientTaskCourier
+  - AbstractAsyncWorkerTaskCourier
+  - AbstractAsyncClientWorkerTaskCourier
+  - RedisAsyncClientTaskCourier
+  - RedisAsyncWorkerTaskCourier
+  - AbstractAsyncClientWorkerTaskCourier
+
+# [1.4.0] - 2023-12-21 - withdrawn
+- Asynchronous couriers has been added and workers has been changed.
+
 # [1.3.2] - 2023-02-23
-- Changes on redis courier init method: added **kwargs (to assign them to an instance)
+- Changes on redis courier init method: added **kwargs (to assign them to an instance).
 
 
 # [1.3.1] - 2023-02-13
@@ -13,7 +25,7 @@
 # [1.3.0] - 2023-02-11 - withdrawn
 
 # [1.2.1] - 2023-02-11
-- Readme fixes
+- Readme fixes.
 
 # [1.2.0] - 2023-02-11
 - Added bulk operations for TaskCourier's:
