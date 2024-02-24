@@ -223,15 +223,14 @@ if __name__ == "__main__":
 
 ### Worker side:
 ```python3
-import redis.asyncio as aioredis
+import redis
 import asyncio
 import aiohttp
 
-from task_helpers.couriers.redis_async import RedisAsyncWorkerTaskCourier
+from task_helpers.couriers.redis import RedisWorkerTaskCourier
 from task_helpers.workers.base_async import BaseAsyncWorker
 
-async_task_courier = RedisAsyncWorkerTaskCourier(
-    aioredis_connection=aioredis.Redis())
+task_courier = RedisWorkerTaskCourier(redis_connection=redis.Redis())
 QUEUE_NAME = "async_data_downloading"
 
 
@@ -265,7 +264,7 @@ class AsyncDownloadingWorker(BaseAsyncWorker):
 
 
 if __name__ == "__main__":
-    worker = AsyncDownloadingWorker(async_task_courier=async_task_courier)
+    worker = AsyncDownloadingWorker(task_courier=task_courier)
     asyncio.run(
         worker.perform(total_iterations=10_000)
     )
