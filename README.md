@@ -6,9 +6,7 @@
 
 The package allows you to work with tasks.\
 The idea is that it would be possible to create a task and send it for execution / processing somewhere (to the worker), without waiting for the result to be executed in the same block of code.
-Or, for example, different clients (from different threads) can send many tasks for processing and each wait for its own result.\
-\
-For synchronous workers, synchronous couriers are used, for asynchronous workers, asynchronous couriers are used. The client can create a task from a synchronous courier. And an asynchronous worker can take a task from this queue as an asynchronous courier.
+Or, for example, different clients (from different threads) can send many tasks for processing and each wait for its own result.
 
 ## Usage example. BaseWorker
 ```bash

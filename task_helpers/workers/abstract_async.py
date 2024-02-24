@@ -1,6 +1,6 @@
 from typing import List, Tuple, Awaitable
 
-from task_helpers.couriers.abstract_async import AbstractAsyncWorkerTaskCourier
+from task_helpers.couriers.abstract import AbstractWorkerTaskCourier
 
 
 class AbstractAsyncWorker:
@@ -9,13 +9,12 @@ class AbstractAsyncWorker:
     """
 
     def __init__(
-            self, async_task_courier: AbstractAsyncWorkerTaskCourier,
-            *args, **kwargs):
+            self, task_courier: AbstractWorkerTaskCourier, *args, **kwargs):
         """
-        Initializations. async_task_courier
-        (AbstractAsyncWorkerTaskCourier instance) is required
+        Initializations. task_courier (AbstractWorkerTaskCourier instance)
+        is required
         """
-        self.async_task_courier = async_task_courier
+        self.task_courier = task_courier
 
     async def wait_for_tasks(self) -> Awaitable[List[Tuple]]:
         """

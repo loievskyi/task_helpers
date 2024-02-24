@@ -12,7 +12,7 @@ class ClassicAsyncWorker(BaseAsyncWorker):
     Arguments "args" and "kwargs" are optional.
 
     Class fields:
-    - async_task_courier - an instance of the AbstractAsyncWorkerTaskCourier.
+    - task_courier - an instance of the task_courier.
       Specified when the class is initialized.
     - queue_name - The name of the queue from which tasks are read.
     - after_iteration_sleep_time - Downtime in seconds after each task is

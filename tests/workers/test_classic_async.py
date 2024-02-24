@@ -2,7 +2,6 @@ import uuid
 import unittest
 import asyncio
 
-from task_helpers.couriers.redis_async import RedisAsyncClientWorkerTaskCourier
 from task_helpers.couriers.redis import RedisClientWorkerTaskCourier
 from task_helpers.workers.classic_async import ClassicAsyncWorker
 from ..mixins import RedisSetupMixin
@@ -10,17 +9,14 @@ from ..mixins import RedisSetupMixin
 
 class ClassicWorkerTestCase(RedisSetupMixin, unittest.TestCase):
     """
-    Tests to make sure that ClassicAsyncWorker is working correctly.
+    Tests to make sure that ClassicWorker is working correctly.
     """
 
     def setUp(self):
         super().setUp()
         self.queue_name = "test_queue_name"
         self.task_courier = RedisClientWorkerTaskCourier(self.redis_connection)
-        self.async_task_courier = RedisAsyncClientWorkerTaskCourier(
-            self.aioredis_connection)
-        self.worker = ClassicAsyncWorker(
-            async_task_courier=self.async_task_courier)
+        self.worker = ClassicAsyncWorker(task_courier=self.task_courier)
 
         # monkey patching
         self.worker.queue_name = self.queue_name
