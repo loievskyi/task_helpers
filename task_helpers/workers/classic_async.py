@@ -1,6 +1,7 @@
 import inspect
 import asyncio
 import functools
+from concurrent.futures import ThreadPoolExecutor
 
 from .base_async import BaseAsyncWorker
 
@@ -23,15 +24,12 @@ class ClassicAsyncWorker(BaseAsyncWorker):
 
     max_tasks_per_iteration = 1
 
+    def __init__(self, *args, **kwargs):
+        self.thread_executor = ThreadPoolExecutor(
+            max_workers=self.max_simultaneous_tasks)
+        return super().__init__(*args, **kwargs)
+
     async def perform_single_task(self, task):
-        """
-        Method for task processing.
-        Task is a tuple: (task_id, task_data).
-        task_data is a dictionary with keys "function", "args" and "kwargs".
-        Calls a function with args "args" and kwargs "kwargs", unpacking them,
-        and returns the execution result. Arguments "args" and "kwargs" are
-        optional.
-        """
         task_id, task_data = task
         assert isinstance(task_data, dict), \
             "task_data must be a dict instance."
@@ -47,4 +45,5 @@ class ClassicAsyncWorker(BaseAsyncWorker):
             function_with_data = functools.partial(
                 function, *function_args, **function_kwargs)
             loop = asyncio.get_event_loop()
-            return await loop.run_in_executor(None, function_with_data)
+            return await loop.run_in_executor(
+                self.thread_executor, function_with_data)
