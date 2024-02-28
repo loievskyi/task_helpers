@@ -121,7 +121,7 @@ class BaseAsyncWorker(AbstractAsyncWorker):
                 output_tasks.append((task_id, task_result_data))
 
         if self.needs_result_returning:
-            await self.return_task_results(tasks=output_tasks)
+            await self.return_tasks_results(tasks=output_tasks)
 
         while True:
             try:

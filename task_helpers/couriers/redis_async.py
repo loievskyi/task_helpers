@@ -1,7 +1,6 @@
 import uuid
 import pickle
 import datetime
-# import time
 import asyncio
 
 from .abstract_async import (
@@ -175,7 +174,7 @@ class RedisAsyncWorkerTaskCourier(
           and returns it.
         - return_task_result - returns the result of the processing of the task
           to the client side.
-        - bulk_return_task_results - returns the results of processing
+        - bulk_return_tasks_results - returns the results of processing
           multiple tasks to the client side.
     """
 
@@ -256,7 +255,7 @@ class RedisAsyncWorkerTaskCourier(
         await self.aioredis_connection.set(name=name, value=value,
                                            ex=self.result_timeout)
 
-    async def bulk_return_task_results(self, queue_name, tasks):
+    async def bulk_return_tasks_results(self, queue_name, tasks):
         """returns the results of processing multiple tasks to the client side.
         Tasks is list of tuples: [(task_id, task_result), ...]
         Worker side method.
@@ -297,7 +296,7 @@ class RedisAsyncClientWorkerTaskCourier(
           and returns it.
         - return_task_result - returns the result of the processing of the task
           to the client side.
-        - bulk_return_task_results - returns the results of processing
+        - bulk_return_tasks_results - returns the results of processing
           multiple tasks to the client side.
     """
     pass
