@@ -36,6 +36,8 @@ class BaseWorker(AbstractWorker):
     needs_result_returning = True
 
     def __init__(self, task_courier: AbstractWorkerTaskCourier, **kwargs):
+        assert isinstance(task_courier, AbstractWorkerTaskCourier),\
+            "async_task_courier is not instance of AbstractWorkerTaskCourier"
         self.task_courier = task_courier
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -78,11 +80,11 @@ class BaseWorker(AbstractWorker):
         """
         raise NotImplementedError
 
-    def return_task_results(self, tasks):
+    def return_tasks_results(self, tasks):
         """
         Method method for sending task results to the clients.
         """
-        self.task_courier.bulk_return_task_results(
+        self.task_courier.bulk_return_tasks_results(
             queue_name=self.queue_name,
             tasks=tasks,
         )
@@ -117,7 +119,7 @@ class BaseWorker(AbstractWorker):
                     output_tasks.append((task_id, task_result_data))
 
             if self.needs_result_returning:
-                self.return_task_results(tasks=output_tasks)
+                self.return_tasks_results(tasks=output_tasks)
             time.sleep(self.after_iteration_sleep_time)
 
         self.destroy()

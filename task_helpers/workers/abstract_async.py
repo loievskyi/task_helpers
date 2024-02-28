@@ -1,6 +1,6 @@
 from typing import List, Tuple, Awaitable
 
-from task_helpers.couriers.abstract import AbstractWorkerTaskCourier
+from task_helpers.couriers.abstract_async import AbstractAsyncWorkerTaskCourier
 
 
 class AbstractAsyncWorker:
@@ -9,12 +9,13 @@ class AbstractAsyncWorker:
     """
 
     def __init__(
-            self, task_courier: AbstractWorkerTaskCourier, *args, **kwargs):
+            self, async_task_courier: AbstractAsyncWorkerTaskCourier,
+            *args, **kwargs):
         """
-        Initializations. task_courier (AbstractWorkerTaskCourier instance)
-        is required
+        Initializations. async_task_courier
+        (AbstractAsyncWorkerTaskCourier instance) is required
         """
-        self.task_courier = task_courier
+        self.async_task_courier = async_task_courier
 
     async def wait_for_tasks(self) -> Awaitable[List[Tuple]]:
         """
@@ -46,7 +47,7 @@ class AbstractAsyncWorker:
         """
         raise NotImplementedError
 
-    async def return_task_results(self, tasks: List[Tuple]) -> Awaitable[None]:
+    async def return_tasks_results(self, tasks: List[Tuple]) -> Awaitable[None]:
         """
         Abstract method for returning task results. Tasks like:
         [(task_id, task_data), (task_id, task_data), ...]

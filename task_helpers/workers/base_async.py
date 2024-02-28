@@ -2,19 +2,19 @@ import logging
 import asyncio
 
 from task_helpers.workers.abstract_async import AbstractAsyncWorker
-from task_helpers.couriers.abstract import AbstractWorkerTaskCourier
+from task_helpers.couriers.abstract_async import AbstractAsyncWorkerTaskCourier
 from task_helpers import exceptions
 
 
 class BaseAsyncWorker(AbstractAsyncWorker):
     """
-    Base class for workers.
-    Initialization requires an instance of task_courier.
+    Base class for async workers.
+    Initialization requires an instance of async_task_courier.
     The other kwargs will override the class fields for the current instance
     of the class. They can also be overriden in an inherited class.
 
     Class fields:
-    - task_courier - an instance of the task_courier.
+    - async_task_courier - an instance of the AbstractAsyncWorkerTaskCourier.
       Specified when the class is initialized.
     - queue_name - The name of the queue from which tasks will be performed.
     - after_iteration_sleep_time - Downtime in seconds after each task is
@@ -28,7 +28,7 @@ class BaseAsyncWorker(AbstractAsyncWorker):
       task performing, or False otherwise.
     """
 
-    task_courier: AbstractWorkerTaskCourier = None
+    task_courier: AbstractAsyncWorkerTaskCourier
     queue_name = None
     after_iteration_sleep_time = 0.001
     empty_queue_sleep_time = 0.1
@@ -37,11 +37,15 @@ class BaseAsyncWorker(AbstractAsyncWorker):
     max_simultaneous_tasks = 100
     max_tasks_sleep_time = 0.01
 
-    def __init__(self, task_courier: AbstractWorkerTaskCourier, **kwargs):
+    def __init__(self, async_task_courier: AbstractAsyncWorkerTaskCourier,
+                 **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        self.task_courier = task_courier
+        assert isinstance(async_task_courier, AbstractAsyncWorkerTaskCourier),\
+            "async_task_courier is not instance of " \
+            "AbstractAsyncWorkerTaskCourier"
+        self.async_task_courier = async_task_courier
         self.perform_tasks_coros = set()
 
     async def wait_for_tasks(self):
@@ -82,11 +86,11 @@ class BaseAsyncWorker(AbstractAsyncWorker):
         """
         raise NotImplementedError
 
-    async def return_task_results(self, tasks):
+    async def return_tasks_results(self, tasks):
         """
         Method method for sending task results to the clients.
         """
-        self.task_courier.bulk_return_task_results(
+        await self.async_task_courier.bulk_return_tasks_results(
             queue_name=self.queue_name,
             tasks=tasks,
         )

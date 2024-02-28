@@ -37,9 +37,9 @@ class BaseAsyncWorkerTestCase(RedisSetupMixin, unittest.TestCase):
         raise self.CustomException(text="new custom ex text")
 
     async def perform_tasks_monkeypatching(self, tasks):
-        task_results = [(task_id, str(task_data) + "text")
+        tasks_results = [(task_id, str(task_data) + "text")
                         for task_id, task_data in tasks]
-        return task_results
+        return tasks_results
 
     async def perform_single_task_dependent_on_data_monkeypatching(self, task):
         task_id, task_data = task
@@ -178,12 +178,12 @@ class BaseAsyncWorkerTestCase(RedisSetupMixin, unittest.TestCase):
 
     """
     ===========================================================================
-    return_task_results
+    return_tasks_results
     ===========================================================================
     """
 
-    def test_return_task_results(self):
-        queue_name = "test_return_task_results"
+    def test_return_tasks_results(self):
+        queue_name = "test_return_tasks_results"
         task_data = "test_task_data"
         task_id = self.task_courier.add_task_to_queue(
             queue_name=queue_name,
@@ -197,7 +197,7 @@ class BaseAsyncWorkerTestCase(RedisSetupMixin, unittest.TestCase):
         self.worker.needs_result_returning = True
 
         asyncio.run(
-            self.worker.return_task_results(tasks=output_tasks)
+            self.worker.return_tasks_results(tasks=output_tasks)
         )
 
         exists_task_result = self.task_courier.check_for_done(

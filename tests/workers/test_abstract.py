@@ -27,9 +27,9 @@ class AbstractWorkerTestCadse(unittest.TestCase):
         with self.assertRaises(expected_exception=NotImplementedError):
             self.worker.perform_tasks(tasks=[(uuid.uuid1(), "task_data")])
 
-    def test_return_task_results(self):
+    def test_return_tasks_results(self):
         with self.assertRaises(expected_exception=NotImplementedError):
-            self.worker.return_task_results(
+            self.worker.return_tasks_results(
                 tasks=[(uuid.uuid1(), "task_result")])
 
     def test_destroy(self):
