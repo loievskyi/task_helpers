@@ -18,8 +18,11 @@ class ClassicAsyncWorker(BaseAsyncWorker):
     - queue_name - The name of the queue from which tasks are read.
     - after_iteration_sleep_time - Downtime in seconds after each task is
       completed (e.g. 0.1). Default is 1 millisecond.
-    - return_task_result - True if needs to return the result of the
-      task execution, or False otherwise.
+    - max_tasks_per_iteration - How many tasks can be processed in 1 iteration
+      (in the perform_many_tasks method). Influences how many maximum tasks
+      will be popped from the queue.
+    - needs_result_returning - True if needs to return the result of the
+      task performing, or False otherwise.
     """
 
     max_tasks_per_iteration = 1
@@ -30,6 +33,14 @@ class ClassicAsyncWorker(BaseAsyncWorker):
         return super().__init__(*args, **kwargs)
 
     async def perform_single_task(self, task):
+        """
+        Method for task processing.
+        Task is a tuple: (task_id, task_data).
+        task_data is a dictionary with keys "function", "args" and "kwargs".
+        Calls a function with args "args" and kwargs "kwargs", unpacking them,
+        and returns the execution result. Arguments "args" and "kwargs" are
+        optional.
+        """
         task_id, task_data = task
         assert isinstance(task_data, dict), \
             "task_data must be a dict instance."
