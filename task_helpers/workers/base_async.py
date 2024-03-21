@@ -28,7 +28,7 @@ class BaseAsyncWorker(AbstractAsyncWorker):
       task performing, or False otherwise.
     """
 
-    task_courier: AbstractAsyncWorkerTaskCourier
+    async_task_courier: AbstractAsyncWorkerTaskCourier
     queue_name = None
     after_iteration_sleep_time = 0.001
     empty_queue_sleep_time = 0.1
@@ -55,7 +55,7 @@ class BaseAsyncWorker(AbstractAsyncWorker):
         Count of tasks = min(len_queue, self.max_tasks_per_iteration).
         """
         while True:
-            tasks = self.task_courier.bulk_get_tasks(
+            tasks = self.async_task_courier.bulk_get_tasks(
                 queue_name=self.queue_name,
                 max_count=self.max_tasks_per_iteration)
             if tasks:

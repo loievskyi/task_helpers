@@ -2,7 +2,7 @@ import unittest
 import uuid
 import asyncio
 
-from task_helpers.couriers.abstract import AbstractWorkerTaskCourier
+from task_helpers.couriers.abstract_async import AbstractAsyncWorkerTaskCourier
 from task_helpers.workers.abstract_async import AbstractAsyncWorker
 
 
@@ -13,11 +13,13 @@ class AbstractAsyncWorkerTestCadse(unittest.TestCase):
 
     def setUp(self):
         super().setUp()
-        self.task_courier = AbstractWorkerTaskCourier()
-        self.worker = AbstractAsyncWorker(task_courier=self.task_courier)
+        self.async_task_courier = AbstractAsyncWorkerTaskCourier()
+        self.worker = AbstractAsyncWorker(
+            async_task_courier=self.async_task_courier)
 
     def test___init__(self):
-        worker = AbstractAsyncWorker(task_courier=self.task_courier)
+        worker = AbstractAsyncWorker(
+            async_task_courier=self.async_task_courier)
         self.assertIsInstance(worker, AbstractAsyncWorker)
 
     def test_wait_for_tasks(self):

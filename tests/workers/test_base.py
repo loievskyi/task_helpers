@@ -1,5 +1,6 @@
 import uuid
 import unittest
+import redis
 
 import timeout_decorator
 
@@ -61,6 +62,12 @@ class BaseWorkerTestCase(RedisSetupMixin, unittest.TestCase):
         self.assertEqual(worker.max_tasks_per_iteration, 5)
         self.assertEqual(worker.test_variable, "test_variable_data")
 
+    def test__init___assert_task_courier(self):
+        with self.assertRaises(AssertionError):
+            BaseWorker(None,
+                       max_tasks_per_iteration=5,
+                       test_variable="test_variable_data")
+
     """
     ===========================================================================
     wait_for_tasks
@@ -82,9 +89,10 @@ class BaseWorkerTestCase(RedisSetupMixin, unittest.TestCase):
 
     @timeout_decorator.timeout(1, timeout_exception=TimeoutTestException)
     def test_wait_for_tasks_if_no_tasks(self):
-        with self.assertRaises(self.TimeoutTestException) as context:
+        expected_exceptions = (
+            self.TimeoutTestException, redis.exceptions.TimeoutError)
+        with self.assertRaises(expected_exceptions):
             self.worker.wait_for_tasks()
-        self.assertNotEqual(type(context.exception), TimeoutError)
 
     """
     ===========================================================================

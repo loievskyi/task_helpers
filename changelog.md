@@ -30,9 +30,9 @@
 # [1.2.0] - 2023-02-11
 - Added bulk operations for TaskCourier's:
   - ClientTaskCourier - added bulk_add_tasks_to_queue method & tests for it.
-  - WorkerTaskCourier - added bulk_return_task_results method & tests for it.
+  - WorkerTaskCourier - added bulk_return_tasks_results method & tests for it.
   - Renamed WorkerTaskCourier.get_tasks => WorkerTaskCourier.bulk_get_tasks.
-- Fixes on courier: now courier.bulk_return_task_results "tasks" arg is list of tuples [(task_id, task_result), ...]
+- Fixes on courier: now courier.bulk_return_tasks_results "tasks" arg is list of tuples [(task_id, task_result), ...]
 - Performanse improvements.
 - Changes on docs & readme.
 
@@ -58,7 +58,7 @@ Release.
 - BaseWorker
   - wait_for_tasks - waits for tasks in the queue, pops and returns them.
   - perform_tasks - abstract method for processing tasks. Should return a list of tasks.
-  - return_task_results - method method for sending task results to the clients.
+  - return_tasks_results - method method for sending task results to the clients.
   - perform - the main method that starts the task worker. total_iterations argument are required (how many processing iterations the worker should do).
 - ClassicWorker
   - perform_tasks - Method for processing tasks. Returns a list of tasks.
