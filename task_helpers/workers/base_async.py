@@ -24,15 +24,17 @@ class BaseAsyncWorker(AbstractAsyncWorker):
       will be popped from the queue.
     - needs_result_returning - True if needs to return the result of the
       task performing, or False otherwise.
+    - max_simultaneous_tasks - How many tasks can a worker perform
+      simultaneously.
     """
 
     task_courier: AbstractAsyncWorkerTaskCourier
     queue_name = None
     after_iteration_sleep_time = 0.001
-    empty_queue_sleep_time = 0.1
     max_tasks_per_iteration = 1
     needs_result_returning = True
-    max_simultaneous_tasks = 100
+
+    max_simultaneous_tasks = 10
     max_tasks_sleep_time = 0.01
 
     def __init__(self, async_task_courier: AbstractAsyncWorkerTaskCourier,
@@ -52,7 +54,6 @@ class BaseAsyncWorker(AbstractAsyncWorker):
         tasks depends on the self.max_tasks_per_iteration argument:
         Count of tasks = min(len_queue, self.max_tasks_per_iteration).
         """
-
         return await self.async_task_courier.bulk_wait_for_tasks(
             queue_name=self.queue_name,
             max_count=self.max_tasks_per_iteration,

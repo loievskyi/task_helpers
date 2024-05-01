@@ -29,8 +29,7 @@ class BaseWorker(AbstractWorker):
     task_courier: AbstractWorkerTaskCourier = None
     queue_name = None
     after_iteration_sleep_time = 0.001
-    empty_queue_sleep_time = 0.1
-    max_tasks_per_iteration = 100
+    max_tasks_per_iteration = 1
     needs_result_returning = True
 
     def __init__(self, task_courier: AbstractWorkerTaskCourier, **kwargs):
@@ -46,7 +45,6 @@ class BaseWorker(AbstractWorker):
         tasks depends on the self.max_tasks_per_iteration argument:
         Count of tasks = min(len_queue, self.max_tasks_per_iteration).
         """
-
         return self.task_courier.bulk_wait_for_tasks(
             queue_name=self.queue_name,
             max_count=self.max_tasks_per_iteration,
