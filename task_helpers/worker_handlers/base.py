@@ -33,7 +33,7 @@ class BaseWorkerHandler:
         while True:
             try:
                 process = multiprocessing.Process(
-                    target=self._perform_worker,
+                    target=self.perform_worker,
                     name=self.process_name)
                 process.daemon = True
                 process.start()
