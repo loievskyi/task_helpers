@@ -1,5 +1,6 @@
 import time
 import logging
+import multiprocessing
 
 from task_helpers.workers.abstract import AbstractWorker
 from task_helpers.couriers.abstract import AbstractWorkerTaskCourier
@@ -27,10 +28,12 @@ class BaseWorker(AbstractWorker):
     """
 
     task_courier: AbstractWorkerTaskCourier = None
+    stop_signal: multiprocessing.Value
     queue_name = None
     after_iteration_sleep_time = 0.001
     max_tasks_per_iteration = 1
     needs_result_returning = True
+    check_stop_signal_timeout = 60
 
     def __init__(self, task_courier: AbstractWorkerTaskCourier, **kwargs):
         assert isinstance(task_courier, AbstractWorkerTaskCourier),\
@@ -45,10 +48,17 @@ class BaseWorker(AbstractWorker):
         tasks depends on the self.max_tasks_per_iteration argument:
         Count of tasks = min(len_queue, self.max_tasks_per_iteration).
         """
-        return self.task_courier.bulk_wait_for_tasks(
-            queue_name=self.queue_name,
-            max_count=self.max_tasks_per_iteration,
-        )
+
+        while not self.stop_signal.value:
+            try:
+                return self.task_courier.bulk_wait_for_tasks(
+                    queue_name=self.queue_name,
+                    max_count=self.max_tasks_per_iteration,
+                    timeout=self.check_stop_signal_timeout,
+                )
+            except TimeoutError:
+                pass
+        return []
 
     def perform_tasks(self, tasks):
         """
@@ -100,6 +110,8 @@ class BaseWorker(AbstractWorker):
         - total_iterations - how many iterations should the worker perform.
         """
         for num_task in range(total_iterations):
+            if self.stop_signal.value:
+                break
             input_tasks = self.wait_for_tasks()
             try:
                 output_tasks = self.perform_tasks(tasks=input_tasks)

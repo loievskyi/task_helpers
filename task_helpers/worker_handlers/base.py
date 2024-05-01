@@ -7,6 +7,7 @@ import threading
 import gc
 import asyncio
 import inspect
+import signal
 
 
 class BaseWorkerHandler:
@@ -28,31 +29,47 @@ class BaseWorkerHandler:
         self.worker_init_kwargs = worker_init_kwargs
         for key, value in kwargs.items():
             setattr(self, key, value)
+        self.stop_signal = multiprocessing.Value("b", False)
+
+    def _signal_handler(self, *args, **kwargs):
+        self.stop_signal.value = True
+
+    def _set_stop_signals(self, worker):
+        signal.signal(signal.SIGINT, self._signal_handler)
+        signal.signal(signal.SIGQUIT, self._signal_handler)
+        signal.signal(signal.SIGUSR1, self._signal_handler)
+        signal.signal(signal.SIGUSR2, self._signal_handler)
+        signal.signal(signal.SIGHUP, self._signal_handler)
+        signal.signal(signal.SIGTERM, self._signal_handler)
 
     def new_process_starter(self):
-        try:
-            process = multiprocessing.Process(
-                target=self.perform_worker,
-                name=self.process_name)
-            process.daemon = True
-            process.start()
-            process.join()
-            del process
-            gc.collect()
-        except Exception as ex:
-            logging.error(
-                f"An error has occured on {self.__class__.__name__}."
-                f"new_process_starter: {ex}")
-            time.sleep(1)
+        while not self.stop_signal.value:
+            try:
+                process = multiprocessing.Process(
+                    target=self.perform_worker,
+                    name=self.process_name,
+                    kwargs={"stop_signal": self.stop_signal})
+                process.daemon = True
+                process.start()
+                process.join()
+                del process
+                gc.collect()
+            except Exception as ex:
+                logging.error(
+                    f"An error has occured on {self.__class__.__name__}."
+                    f"new_process_starter: {ex}")
+                time.sleep(1)
+        self.threads.task_done()
 
     def create_worker_instance(self):
         raise NotImplementedError
 
-    def perform_worker(self):
+    def perform_worker(self, stop_signal: multiprocessing.Value):
         try:
             iterations_to_restart = self.iterations_to_restart + \
                 random.randint(0, self.iterations_to_restart_jitter)
             worker = self.create_worker_instance()
+            worker.stop_signal = stop_signal
             if inspect.iscoroutinefunction(worker.perform):
                 asyncio.run(
                     worker.perform(total_iterations=iterations_to_restart)

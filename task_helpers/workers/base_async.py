@@ -54,10 +54,17 @@ class BaseAsyncWorker(AbstractAsyncWorker):
         tasks depends on the self.max_tasks_per_iteration argument:
         Count of tasks = min(len_queue, self.max_tasks_per_iteration).
         """
-        return await self.async_task_courier.bulk_wait_for_tasks(
-            queue_name=self.queue_name,
-            max_count=self.max_tasks_per_iteration,
-        )
+
+        while not self.is_stopping:
+            try:
+                return await self.async_task_courier.bulk_wait_for_tasks(
+                    queue_name=self.queue_name,
+                    max_count=self.max_tasks_per_iteration,
+                    timeout=self.check_stop_signal_timeout,
+                )
+            except TimeoutError:
+                pass
+        return []
 
     async def perform_tasks(self, tasks):
         """
@@ -130,6 +137,10 @@ class BaseAsyncWorker(AbstractAsyncWorker):
             except Exception:
                 await asyncio.sleep(self.max_tasks_sleep_time)
 
+    @property
+    async def is_stopping(self):
+        return hasattr(self, "stop_signal") and self.stop_signal.Value is True
+
     async def perform(self, total_iterations):
         """
         The main method that starts the task worker.
@@ -141,6 +152,9 @@ class BaseAsyncWorker(AbstractAsyncWorker):
         await self.async_init()
 
         for num_task in range(total_iterations):
+            if self.stop_signal.value:
+                break
+
             while len(self.perform_tasks_coros) >= self.max_simultaneous_tasks:
                 await asyncio.sleep(self.max_tasks_sleep_time)
             input_tasks = await self.wait_for_tasks()
