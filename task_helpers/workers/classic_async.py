@@ -1,6 +1,7 @@
 import inspect
 import asyncio
 import functools
+from concurrent.futures import ThreadPoolExecutor
 
 from .base_async import BaseAsyncWorker
 
@@ -22,9 +23,16 @@ class ClassicAsyncWorker(BaseAsyncWorker):
       will be popped from the queue.
     - needs_result_returning - True if needs to return the result of the
       task performing, or False otherwise.
+    - max_simultaneous_tasks - How many tasks can a worker perform
+      simultaneously.
     """
 
     max_tasks_per_iteration = 1
+
+    def __init__(self, *args, **kwargs):
+        self.thread_executor = ThreadPoolExecutor(
+            max_workers=self.max_simultaneous_tasks)
+        return super().__init__(*args, **kwargs)
 
     async def perform_single_task(self, task):
         """
@@ -50,4 +58,5 @@ class ClassicAsyncWorker(BaseAsyncWorker):
             function_with_data = functools.partial(
                 function, *function_args, **function_kwargs)
             loop = asyncio.get_event_loop()
-            return await loop.run_in_executor(None, function_with_data)
+            return await loop.run_in_executor(
+                self.thread_executor, function_with_data)
