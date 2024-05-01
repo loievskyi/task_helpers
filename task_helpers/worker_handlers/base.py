@@ -19,7 +19,8 @@ class BaseWorkerHandler:
     @property
     def process_name(self):
         if self.worker_class:
-            return f"taskhelpers.{self.worker_class.__name__}"
+            return f"taskhelpers.{self.worker_class.__name__}." \
+                f"{self.worker_class.queue_name}"
         return "taskhelpers.worker"
 
     def __init__(self, worker_init_kwargs=None, **kwargs):
@@ -48,7 +49,7 @@ class BaseWorkerHandler:
     def create_worker_instance(self):
         raise NotImplementedError
 
-    def _perform_worker(self):
+    def perform_worker(self):
         try:
             iterations_to_restart = self.iterations_to_restart + \
                 random.randint(0, self.iterations_to_restart_jitter)
@@ -63,7 +64,7 @@ class BaseWorkerHandler:
             time.sleep(0.1)
             logging.error(
                 f"An error has occured on {self.__class__.__name__}"
-                f"._perform_worker: {ex}")
+                f".perform_worker: {ex}")
 
     def perform(self):
         for num in range(1, self.count_workers+1):
