@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 
 class AbstractClientTaskCourier(object):
@@ -31,7 +31,7 @@ class AbstractClientTaskCourier(object):
         raise NotImplementedError
 
     def wait_for_task_result(self, queue_name, task_id, delete_data=True,
-                             timeout=None) -> object:
+                             timeout=None) -> Union[object, TimeoutError]:
         """Waits for the result of the task to appear, and then returns it.
         Raises TimeoutError in case of timeout. If an error occurs
         during the execution of the task, returns exceptions.PerformTaskError.

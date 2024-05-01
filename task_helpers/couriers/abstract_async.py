@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Union, Awaitable
 
 
 class AbstractAsyncClientTaskCourier(object):
@@ -18,8 +18,8 @@ class AbstractAsyncClientTaskCourier(object):
         - check_for_done - сhecks if the task has completed.
     """
 
-    async def get_task_result(self, queue_name, task_id,
-                              delete_data=True) -> object:
+    async def get_task_result(self, queue_name, task_id, delete_data=True) \
+            -> Awaitable[object]:
         """Returns the result of the task, if it exists.
         Otherwise, raises exceptions.TaskResultDoesNotExist. If an error occurs
         during the execution of the task, returns exceptions.PerformTaskError.
@@ -32,7 +32,7 @@ class AbstractAsyncClientTaskCourier(object):
         raise NotImplementedError
 
     async def wait_for_task_result(self, queue_name, task_id, delete_data=True,
-                                   timeout=None) -> object:
+                                   timeout=None) -> Awaitable[Union[object]]:
         """Waits for the result of the task to appear, and then returns it.
         Raises TimeoutError in case of timeout. If an error occurs
         during the execution of the task, returns exceptions.PerformTaskError.
@@ -47,7 +47,8 @@ class AbstractAsyncClientTaskCourier(object):
           it appears). If specified - raises TimeoutError if time is up"""
         raise NotImplementedError
 
-    async def add_task_to_queue(self, queue_name, task_data) -> object:
+    async def add_task_to_queue(self, queue_name, task_data) \
+            -> Awaitable[object]:
         """Adds one task to the queue for processing. Returns task_id.
         Client side method.
 
@@ -55,7 +56,8 @@ class AbstractAsyncClientTaskCourier(object):
         - task_data - task objects, what will be added to qeueue."""
         raise NotImplementedError
 
-    async def bulk_add_tasks_to_queue(self, queue_name, tasks_data) -> List:
+    async def bulk_add_tasks_to_queue(self, queue_name, tasks_data) \
+            -> Awaitable[List]:
         """Adds many tasks to the queue for processing.
         Returns a list of task_ids.
         Client side method.
@@ -64,7 +66,7 @@ class AbstractAsyncClientTaskCourier(object):
         - tasks_data - task objects, what will be added to qeueue."""
         raise NotImplementedError
 
-    async def check_for_done(self, queue_name, task_id) -> bool:
+    async def check_for_done(self, queue_name, task_id) -> Awaitable[bool]:
         """Сhecks if the task has completed.
         Returns True - if task is done (successful or unsuccessful),
         or False if there is no task result yet.
@@ -91,7 +93,7 @@ class AbstractAsyncWorkerTaskCourier(object):
           multiple tasks to the client side.
     """
 
-    async def get_task(self, queue_name) -> Tuple:
+    async def get_task(self, queue_name) -> Awaitable[Tuple]:
         """Pops one task from the queue and returns it.
         Task is a tuple (task_id, task_data)
         If task doesn't exists, raises exceptions.TaskDoesNotExist.
@@ -100,7 +102,8 @@ class AbstractAsyncWorkerTaskCourier(object):
         - queue_name - queue name, used in the add_task_to_queue method."""
         raise NotImplementedError
 
-    async def bulk_get_tasks(self, queue_name, max_count) -> List[Tuple]:
+    async def bulk_get_tasks(self, queue_name, max_count) \
+            -> Awaitable[List[Tuple]]:
         """Pops many tasks from the queue and returns them. The number of task
         which depends on max_count and the number of elements in the queue.
         Tasks are [(task_id, task_data), (task_id, task_data), ...].
@@ -112,7 +115,8 @@ class AbstractAsyncWorkerTaskCourier(object):
           the queue"""
         raise NotImplementedError
 
-    async def wait_for_task(self, queue_name, timeout=None) -> Tuple:
+    async def wait_for_task(self, queue_name, timeout=None) \
+            -> Awaitable[Union[TimeoutError, Tuple]]:
         """Waits for a task to appear, pops it from the queue, and returns it.
         Task is a tuple (task_id, task_data).
         If timeout is None (default), then waits for a task indefinitely.
@@ -125,8 +129,8 @@ class AbstractAsyncWorkerTaskCourier(object):
           TimeoutError if time is up"""
         raise NotImplementedError
 
-    async def bulk_wait_for_tasks(self, queue_name, max_count,
-                                  timeout=None) -> List[Tuple]:
+    async def bulk_wait_for_tasks(self, queue_name, max_count, timeout=None) \
+            -> Awaitable[Union[TimeoutError, List[Tuple]]]:
         """
         Waits for tasks in the queue, pops and returns them.
         Raises TimeoutError in case of timeout.
@@ -140,8 +144,8 @@ class AbstractAsyncWorkerTaskCourier(object):
           TimeoutError if time is up"""
         raise NotImplementedError
 
-    async def return_task_result(self, queue_name, task_id,
-                                 task_result) -> None:
+    async def return_task_result(self, queue_name, task_id, task_result) \
+            -> Awaitable:
         """Returns the result of the processing of the task to the client side.
         Worker side method.
 
@@ -151,7 +155,7 @@ class AbstractAsyncWorkerTaskCourier(object):
           returned to the client."""
         raise NotImplementedError
 
-    async def bulk_return_task_results(self, queue_name, tasks) -> None:
+    async def bulk_return_task_results(self, queue_name, tasks) -> Awaitable:
         """Returns the results of processing multiple tasks to the client side.
         Tasks is list of tuples: [(task_id, task_result), ...]
         Worker side method.
