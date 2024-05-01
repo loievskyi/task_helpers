@@ -30,7 +30,7 @@ class AbstractWorker:
         """
         raise NotImplementedError
 
-    def return_task_results(self, tasks: List[Tuple]) -> None:
+    def return_tasks_results(self, tasks: List[Tuple]) -> None:
         """
         Abstract method for returning task results. Tasks like:
         [(task_id, task_data), (task_id, task_data), ...]

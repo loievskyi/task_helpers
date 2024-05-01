@@ -47,7 +47,7 @@ class AbstractAsyncWorker:
         """
         raise NotImplementedError
 
-    async def return_task_results(self, tasks: List[Tuple]) -> Awaitable[None]:
+    async def return_tasks_results(self, tasks: List[Tuple]) -> Awaitable[None]:
         """
         Abstract method for returning task results. Tasks like:
         [(task_id, task_data), (task_id, task_data), ...]

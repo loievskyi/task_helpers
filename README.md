@@ -111,7 +111,7 @@ the couriers module is responsible for sending tasks from the worker to the clie
 - bulk_get_tasks - pops many tasks from the queue and returns them.
 - wait_for_task - Waits for a task to appear, pops it from the queue, and returns it.
 - return_task_result - returns the result of the processing of the task to the client side.
-- bulk_return_task_results - returns the results of processing multiple tasks to the client side.
+- bulk_return_tasks_results - returns the results of processing multiple tasks to the client side.
 
 ### ClientWorkerTaskCourier & AsyncClientWorkerTaskCourier:
 - all of the above
@@ -127,7 +127,7 @@ A worker that can process many tasks in one iteration. (This can be useful if ta
 - wait_for_tasks - waits for tasks in the queue, pops and returns them;
 - perform_tasks - method for processing tasks. Should return a list of tasks.
 - perform_single_task - abstract method for processing one task. Should return the result of the task. Not used if the "perform_tasks" method is overridden.
-- return_task_results - method for sending task results to the clients.
+- return_tasks_results - method for sending task results to the clients.
 - destroy - method for destroy objects after performing (requests.Session().close, for example)
 - perform - the main method that starts the task worker. total_iterations argument are required (how many processing iterations the worker should do.)
 

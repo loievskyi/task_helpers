@@ -80,10 +80,10 @@ class AbstractAsyncWorkerTaskCourierTestCase(unittest.IsolatedAsyncioTestCase):
                 task_id=uuid.uuid1(),
                 task_result="task_result")
 
-    async def test_bulk_return_task_results(self):
+    async def test_bulk_return_tasks_results(self):
         with self.assertRaises(expected_exception=NotImplementedError):
             task = (uuid.uuid1(), "task_result")
-            await self.async_task_courier.bulk_return_task_results(
+            await self.async_task_courier.bulk_return_tasks_results(
                 queue_name="queue_name",
                 tasks=[task]
             )

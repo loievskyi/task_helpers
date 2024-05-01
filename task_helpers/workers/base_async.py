@@ -83,11 +83,11 @@ class BaseAsyncWorker(AbstractAsyncWorker):
         """
         raise NotImplementedError
 
-    async def return_task_results(self, tasks):
+    async def return_tasks_results(self, tasks):
         """
         Method method for sending task results to the clients.
         """
-        await self.async_task_courier.bulk_return_task_results(
+        await self.async_task_courier.bulk_return_tasks_results(
             queue_name=self.queue_name,
             tasks=tasks,
         )
@@ -122,7 +122,7 @@ class BaseAsyncWorker(AbstractAsyncWorker):
                 output_tasks.append((task_id, task_result_data))
 
         if self.needs_result_returning:
-            await self.return_task_results(tasks=output_tasks)
+            await self.return_tasks_results(tasks=output_tasks)
 
         while True:
             try:

@@ -89,7 +89,7 @@ class AbstractAsyncWorkerTaskCourier(object):
           and returns it.
         - return_task_result - returns the result of the processing of the task
           to the client side.
-        - bulk_return_task_results - returns the results of processing
+        - bulk_return_tasks_results - returns the results of processing
           multiple tasks to the client side.
     """
 
@@ -155,7 +155,7 @@ class AbstractAsyncWorkerTaskCourier(object):
           returned to the client."""
         raise NotImplementedError
 
-    async def bulk_return_task_results(self, queue_name, tasks) -> Awaitable:
+    async def bulk_return_tasks_results(self, queue_name, tasks) -> Awaitable:
         """Returns the results of processing multiple tasks to the client side.
         Tasks is list of tuples: [(task_id, task_result), ...]
         Worker side method.
@@ -189,7 +189,7 @@ class AbstractAsyncClientWorkerTaskCourier(
           them.
         - return_task_result - returns the result of the processing of the task
           to the client side.
-        - bulk_return_task_results - returns the results of processing
+        - bulk_return_tasks_results - returns the results of processing
           multiple tasks to the client side.
     """
     pass
