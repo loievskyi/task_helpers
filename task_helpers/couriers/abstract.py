@@ -10,6 +10,8 @@ class AbstractClientTaskCourier(object):
         - get_task_result - returns the result of the task, if it exists.
         - wait_for_task_result - waits for the result of the task to appear,
           and then returns it.
+        - bulk_wait_for_tasks - waits for tasks in the queue, pops and returns
+          them.
         - add_task_to_queue - adds one task to the queue for processing.
         - bulk_add_tasks_to_queue - adds many tasks to the queue for
           processing.
@@ -177,6 +179,8 @@ class AbstractClientWorkerTaskCourier(
         - bulk_get_tasks - pops many tasks from the queue and returns them.
         - wait_for_task - Waits for a task to appear, pops it from the queue,
           and returns it.
+        - bulk_wait_for_tasks - waits for tasks in the queue, pops and returns
+          them.
         - return_task_result - returns the result of the processing of the task
           to the client side.
         - bulk_return_task_results - returns the results of processing

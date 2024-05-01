@@ -175,6 +175,8 @@ class RedisAsyncWorkerTaskCourier(
         - bulk_get_tasks - pops many tasks from the queue and returns them.
         - wait_for_task - Waits for a task to appear, pops it from the queue,
           and returns it.
+        - bulk_wait_for_tasks - waits for tasks in the queue, pops and returns
+          them.
         - return_task_result - returns the result of the processing of the task
           to the client side.
         - bulk_return_task_results - returns the results of processing
@@ -322,6 +324,8 @@ class RedisAsyncClientWorkerTaskCourier(
         - bulk_get_tasks - pops many tasks from the queue and returns them.
         - wait_for_task - Waits for a task to appear, pops it from the queue,
           and returns it.
+        - bulk_wait_for_tasks - waits for tasks in the queue, pops and returns
+          them.
         - return_task_result - returns the result of the processing of the task
           to the client side.
         - bulk_return_task_results - returns the results of processing
