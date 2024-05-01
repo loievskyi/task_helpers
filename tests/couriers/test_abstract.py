@@ -70,6 +70,14 @@ class AbstractWorkerTaskCourierTestCase(unittest.TestCase):
         with self.assertRaises(expected_exception=NotImplementedError):
             self.task_courier.wait_for_task(queue_name="queue_name")
 
+    def test_bulk_wait_for_tasks(self):
+        with self.assertRaises(expected_exception=NotImplementedError):
+            self.task_courier.bulk_wait_for_tasks(
+                queue_name="queue_name",
+                max_count=100,
+                timeout=1,
+            )
+
     def test_return_task_result(self):
         with self.assertRaises(expected_exception=NotImplementedError):
             self.task_courier.return_task_result(

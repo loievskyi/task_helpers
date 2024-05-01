@@ -73,6 +73,14 @@ class AbstractAsyncWorkerTaskCourierTestCase(unittest.IsolatedAsyncioTestCase):
             await self.async_task_courier.wait_for_task(
                 queue_name="queue_name")
 
+    async def test_bulk_wait_for_tasks(self):
+        with self.assertRaises(expected_exception=NotImplementedError):
+            await self.async_task_courier.bulk_wait_for_tasks(
+                queue_name="queue_name",
+                max_count=100,
+                timeout=1,
+            )
+
     async def test_return_task_result(self):
         with self.assertRaises(expected_exception=NotImplementedError):
             await self.async_task_courier.return_task_result(

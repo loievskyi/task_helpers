@@ -553,6 +553,33 @@ class RedisWorkerTaskCourierTestCase(RedisSetupMixin, unittest.TestCase):
         self.assertEqual(before_task_id, after_task_id)
         self.assertEqual(before_task_data, after_task_data)
 
+    def test_bulk_wait_for_tasks_if_tasks_exists(self):
+        queue_name = "test_queue_name"
+        key_name = self.task_courier._get_full_queue_name(
+            queue_name=queue_name, sufix="pending")
+
+        before_tasks = []
+        for num in range(10):
+            before_task_id = uuid.uuid1()
+            before_task_data = f"task_data_{num}"
+            task = (before_task_id, before_task_data)
+            self.redis_connection.rpush(key_name, pickle.dumps(task))
+            before_tasks.append(task)
+
+        after_tasks = self.task_courier.bulk_wait_for_tasks(
+            queue_name=queue_name, max_count=100)
+        self.assertEqual(len(after_tasks), 10)
+        self.assertListEqual(before_tasks, after_tasks)
+
+    @timeout_decorator.timeout(1, timeout_exception=TimeoutTestException)
+    def test_bulk_wait_for_tasks_if_no_tasks(self):
+        expected_exceptions = (
+            TimeoutTestException, redis.exceptions.TimeoutError)
+        with self.assertRaises(expected_exceptions) as context:
+            self.task_courier.bulk_wait_for_tasks(
+                queue_name="test_queue_name", max_count=100)
+        self.assertNotEqual(type(context.exception), TimeoutError)
+
     def test_get_task_if_task_exists(self):
         queue_name = "test_queue_name"
         before_task_id = uuid.uuid1()
