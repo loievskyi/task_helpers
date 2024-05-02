@@ -112,7 +112,7 @@ class BaseAsyncWorker(AbstractAsyncWorker):
         try:
             output_tasks = await self.perform_tasks(tasks=input_tasks)
         except Exception as ex:
-            logging.error(
+            logging.exception(
                 f"An error has occured on Worker._async_perform_inner: {ex}")
             output_tasks = list()
             for task in input_tasks:

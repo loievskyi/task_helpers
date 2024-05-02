@@ -104,7 +104,8 @@ class BaseWorker(AbstractWorker):
             try:
                 output_tasks = self.perform_tasks(tasks=input_tasks)
             except Exception as ex:
-                logging.error(f"An error has occured on Worker.perform: {ex}")
+                logging.exception(
+                    f"An error has occured on Worker.perform: {ex}")
                 output_tasks = list()
                 for task in input_tasks:
                     task_id = task[0]

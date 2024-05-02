@@ -41,7 +41,7 @@ class BaseWorkerHandler:
                 del process
                 gc.collect()
             except Exception as ex:
-                logging.error(
+                logging.exception(
                     f"An error has occured on {self.__class__.__name__}."
                     f"new_process_starter: {ex}")
                 time.sleep(1)
@@ -62,7 +62,7 @@ class BaseWorkerHandler:
                 worker.perform(total_iterations=iterations_to_restart)
         except Exception as ex:
             time.sleep(0.1)
-            logging.error(
+            logging.exception(
                 f"An error has occured on {self.__class__.__name__}"
                 f".perform_worker: {ex}")
 
@@ -73,7 +73,7 @@ class BaseWorkerHandler:
                 thread.start()
                 self.threads.put(thread)
             except Exception as ex:
-                logging.error(
+                logging.exception(
                     f"An error has occured on {self.__class__.__name__}"
                     f".perform: {ex}")
         self.threads.join()
