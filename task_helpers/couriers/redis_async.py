@@ -148,7 +148,8 @@ class RedisAsyncClientTaskCourier(
 
         full_queue_name = await self._get_full_queue_name(
             queue_name=queue_name, sufix="pending")
-        await self.aioredis_connection.rpush(full_queue_name, *tasks)
+        if tasks_data:
+            await self.aioredis_connection.rpush(full_queue_name, *tasks)
         return task_ids
 
     async def check_for_done(self, queue_name, task_id):
