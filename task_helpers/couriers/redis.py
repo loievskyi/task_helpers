@@ -145,7 +145,7 @@ class RedisClientTaskCourier(FullQueueNameMixin, AbstractClientTaskCourier):
         full_queue_name = self._get_full_queue_name(
             queue_name=queue_name, sufix="pending")
         if tasks_data:
-            self.aioredis_connection.rpush(full_queue_name, *tasks)
+            self.redis_connection.rpush(full_queue_name, *tasks)
         return task_ids
 
     def check_for_done(self, queue_name, task_id):
