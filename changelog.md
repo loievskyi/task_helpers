@@ -11,7 +11,7 @@
 - Asynchronous couriers has been added and workers has been changed.
 
 # [1.3.2] - 2023-02-23
-- Changes on redis courier init method: added **kwargs (to assign them to an instance)
+- Changes on redis courier init method: added **kwargs (to assign them to an instance).
 
 
 # [1.3.1] - 2023-02-13
@@ -19,20 +19,20 @@
   - AbstractAsyncWorker
   - BaseAsyncWorker
   - ClassicAsyncWorker
-- Added async_init & async_destroy methods for async workers
-- Added destroy method for sync workers
+- Added async_init & async_destroy methods for async workers.
+- Added destroy method for sync workers.
 
 # [1.3.0] - 2023-02-11 - withdrawn
 
 # [1.2.1] - 2023-02-11
-- Readme fixes
+- Readme fixes.
 
 # [1.2.0] - 2023-02-11
 - Added bulk operations for TaskCourier's:
   - ClientTaskCourier - added bulk_add_tasks_to_queue method & tests for it.
   - WorkerTaskCourier - added bulk_return_task_results method & tests for it.
   - Renamed WorkerTaskCourier.get_tasks => WorkerTaskCourier.bulk_get_tasks.
-- Fixes on courier: now courier.bulk_return_task_results "tasks" arg is list of tuples [(task_id, task_result), ...]
+- Fixes on courier: now courier.bulk_return_task_results "tasks" arg is list of tuples [(task_id, task_result), ...].
 - Performanse improvements.
 - Changes on docs & readme.
 
