@@ -96,7 +96,7 @@ class BaseWorkerHandlerTestCase(RedisSetupMixin, unittest.TestCase):
             task_courier_class=RedisClientWorkerTaskCourier,
             test_variable="test_variable_data")
         self.assertEqual(worker.worker_class, BaseWorker)
-        self.assertIsNone(worker.worker_init_kwargs)
+        self.assertIsInstance(worker.worker_init_kwargs, dict)
         self.assertEqual(worker.test_variable, "test_variable_data")
 
     """
@@ -107,5 +107,4 @@ class BaseWorkerHandlerTestCase(RedisSetupMixin, unittest.TestCase):
 
     def test_create_worker_instance(self):
         with self.assertRaises(NotImplementedError):
-            BaseWorkerHandler().create_worker_instance()
-
+            BaseWorkerHandler().create_worker_instance(None)

@@ -25,16 +25,17 @@ class BaseWorkerHandler:
 
     def __init__(self, worker_init_kwargs=None, **kwargs):
         self.threads = queue.Queue()
-        self.worker_init_kwargs = worker_init_kwargs
+        self.worker_init_kwargs = worker_init_kwargs or dict()
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    def new_process_starter(self):
+    def new_process_starter(self, worker_init_kwargs):
         while True:
             try:
                 process = multiprocessing.Process(
                     target=self.perform_worker,
-                    name=self.process_name)
+                    name=self.process_name,
+                    kwargs={"worker_init_kwargs": worker_init_kwargs})
                 process.daemon = True
                 process.start()
                 process.join()
@@ -46,14 +47,14 @@ class BaseWorkerHandler:
                     f"new_process_starter: {ex}")
                 time.sleep(1)
 
-    def create_worker_instance(self):
+    def create_worker_instance(self, worker_init_kwargs):
         raise NotImplementedError
 
-    def perform_worker(self):
+    def perform_worker(self, worker_init_kwargs):
         try:
             iterations_to_restart = self.iterations_to_restart + \
                 random.randint(0, self.iterations_to_restart_jitter)
-            worker = self.create_worker_instance()
+            worker = self.create_worker_instance(worker_init_kwargs)
             if inspect.iscoroutinefunction(worker.perform):
                 asyncio.run(
                     worker.perform(total_iterations=iterations_to_restart)
@@ -69,7 +70,9 @@ class BaseWorkerHandler:
     def perform(self):
         for num in range(1, self.count_workers+1):
             try:
-                thread = threading.Thread(target=self.new_process_starter)
+                thread = threading.Thread(
+                    target=self.new_process_starter,
+                    kwargs={"worker_init_kwargs": self.worker_init_kwargs})
                 thread.start()
                 self.threads.put(thread)
             except Exception as ex:
