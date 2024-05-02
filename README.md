@@ -6,9 +6,7 @@
 
 The package allows you to work with tasks.\
 The idea is that it would be possible to create a task and send it for execution / processing somewhere (to the worker), without waiting for the result to be executed in the same block of code.
-Or, for example, different clients (from different threads) can send many tasks for processing and each wait for its own result.\
-\
-For synchronous workers, synchronous couriers are used, for asynchronous workers, asynchronous couriers are used. The client can create a task from a synchronous courier. And an asynchronous worker can take a task from this queue as an asynchronous courier.
+Or, for example, different clients (from different threads) can send many tasks for processing and each wait for its own result.
 
 ## Usage example. BaseWorker
 ```bash
@@ -225,15 +223,14 @@ if __name__ == "__main__":
 
 ### Worker side:
 ```python3
-import redis.asyncio as aioredis
+import redis
 import asyncio
 import aiohttp
 
-from task_helpers.couriers.redis_async import RedisAsyncWorkerTaskCourier
+from task_helpers.couriers.redis import RedisWorkerTaskCourier
 from task_helpers.workers.base_async import BaseAsyncWorker
 
-async_task_courier = RedisAsyncWorkerTaskCourier(
-    aioredis_connection=aioredis.Redis())
+task_courier = RedisWorkerTaskCourier(redis_connection=redis.Redis())
 QUEUE_NAME = "async_data_downloading"
 
 
@@ -267,7 +264,7 @@ class AsyncDownloadingWorker(BaseAsyncWorker):
 
 
 if __name__ == "__main__":
-    worker = AsyncDownloadingWorker(async_task_courier=async_task_courier)
+    worker = AsyncDownloadingWorker(task_courier=task_courier)
     asyncio.run(
         worker.perform(total_iterations=10_000)
     )
