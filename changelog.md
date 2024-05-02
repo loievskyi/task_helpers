@@ -1,3 +1,9 @@
+# [1.5.0] - 2024-05-02
+- Optimization:
+  - task responses in RedisTaskCourier (sync, async) are now as redis lists,
+  and are reads through blpop / blmove (does not make periodic checks)
+  - Added bulk_get_tasks method for RedisTaskCourier
+
 # [1.4.1] - 2024-02-24
 - Asynchronous couriers has been added:
   - AbstractAsyncClientTaskCourier
