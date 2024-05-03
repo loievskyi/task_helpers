@@ -1,5 +1,6 @@
 import time
 import logging
+import multiprocessing
 
 from task_helpers.workers.abstract import AbstractWorker
 from task_helpers.couriers.abstract import AbstractWorkerTaskCourier
@@ -32,6 +33,9 @@ class BaseWorker(AbstractWorker):
     max_tasks_per_iteration = 1
     needs_result_returning = True
 
+    stop_signal: multiprocessing.Value
+    check_stop_signal_timeout = 60
+
     def __init__(self, task_courier: AbstractWorkerTaskCourier, **kwargs):
         assert isinstance(task_courier, AbstractWorkerTaskCourier),\
             "async_task_courier is not instance of AbstractWorkerTaskCourier"
@@ -39,16 +43,34 @@ class BaseWorker(AbstractWorker):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+    @property
+    def is_not_stopped(self):
+        if hasattr(self, "stop_signal"):
+            return not bool(self.stop_signal.value)
+        return True
+
+    @property
+    def is_stopped(self):
+        if hasattr(self, "stop_signal"):
+            return bool(self.stop_signal.value)
+        return False
+
     def wait_for_tasks(self):
         """
         Waits for tasks in the queue, pops and returns them. The count of
         tasks depends on the self.max_tasks_per_iteration argument:
         Count of tasks = min(len_queue, self.max_tasks_per_iteration).
         """
-        return self.task_courier.bulk_wait_for_tasks(
-            queue_name=self.queue_name,
-            max_count=self.max_tasks_per_iteration,
-        )
+        while self.is_not_stopped:
+            try:
+                return self.task_courier.bulk_wait_for_tasks(
+                    queue_name=self.queue_name,
+                    max_count=self.max_tasks_per_iteration,
+                    timeout=self.check_stop_signal_timeout,
+                )
+            except TimeoutError:
+                pass
+        return []
 
     def perform_tasks(self, tasks):
         """
@@ -100,6 +122,8 @@ class BaseWorker(AbstractWorker):
         - total_iterations - how many iterations should the worker perform.
         """
         for num_task in range(total_iterations):
+            if self.is_stopped:
+                break
             input_tasks = self.wait_for_tasks()
             try:
                 output_tasks = self.perform_tasks(tasks=input_tasks)
