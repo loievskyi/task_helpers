@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import multiprocessing
 
 from task_helpers.workers.abstract_async import AbstractAsyncWorker
 from task_helpers.couriers.abstract_async import AbstractAsyncWorkerTaskCourier
@@ -37,6 +38,9 @@ class BaseAsyncWorker(AbstractAsyncWorker):
     max_simultaneous_tasks = 10
     max_tasks_sleep_time = 0.01
 
+    stop_signal: multiprocessing.Value
+    check_stop_signal_timeout = 60
+
     def __init__(self, async_task_courier: AbstractAsyncWorkerTaskCourier,
                  **kwargs):
         for key, value in kwargs.items():
@@ -48,16 +52,34 @@ class BaseAsyncWorker(AbstractAsyncWorker):
         self.async_task_courier = async_task_courier
         self.perform_tasks_coros = set()
 
+    @property
+    def is_not_stopped(self):
+        if hasattr(self, "stop_signal"):
+            return not bool(self.stop_signal.value)
+        return True
+
+    @property
+    def is_stopped(self):
+        if hasattr(self, "stop_signal"):
+            return bool(self.stop_signal.value)
+        return False
+
     async def wait_for_tasks(self):
         """
         Waits for tasks in the queue, pops and returns them. The count of
         tasks depends on the self.max_tasks_per_iteration argument:
         Count of tasks = min(len_queue, self.max_tasks_per_iteration).
         """
-        return await self.async_task_courier.bulk_wait_for_tasks(
-            queue_name=self.queue_name,
-            max_count=self.max_tasks_per_iteration,
-        )
+        while self.is_not_stopped:
+            try:
+                return await self.async_task_courier.bulk_wait_for_tasks(
+                    queue_name=self.queue_name,
+                    max_count=self.max_tasks_per_iteration,
+                    timeout=self.check_stop_signal_timeout,
+                )
+            except TimeoutError:
+                pass
+        return []
 
     async def perform_tasks(self, tasks):
         """
@@ -130,6 +152,10 @@ class BaseAsyncWorker(AbstractAsyncWorker):
             except Exception:
                 await asyncio.sleep(self.max_tasks_sleep_time)
 
+    @property
+    async def is_stopping(self):
+        return hasattr(self, "stop_signal") and self.stop_signal.Value is True
+
     async def perform(self, total_iterations):
         """
         The main method that starts the task worker.
@@ -141,6 +167,9 @@ class BaseAsyncWorker(AbstractAsyncWorker):
         await self.async_init()
 
         for num_task in range(total_iterations):
+            if self.is_stopped:
+                break
+
             while len(self.perform_tasks_coros) >= self.max_simultaneous_tasks:
                 await asyncio.sleep(self.max_tasks_sleep_time)
             input_tasks = await self.wait_for_tasks()
