@@ -5,10 +5,7 @@ from collections.abc import Callable
 import msgpack
 
 
-class AbstractSerializable(ABC):
-    dumps_method: Callable = pickle.dumps
-    loads_method: Callable = pickle.loads
-
+class Serializable(ABC):
     @abstractmethod
     def serialize(self):
         raise NotImplementedError
@@ -19,11 +16,11 @@ class AbstractSerializable(ABC):
         raise NotImplementedError
 
 
-class PickleSerializable(AbstractSerializable, ABC):
+class PickleSerializable(Serializable, ABC):
     dumps_method: Callable = pickle.dumps
     loads_method: Callable = pickle.loads
 
 
-class MsgpackSerializable(AbstractSerializable, ABC):
+class MsgpackSerializable(Serializable, ABC):
     dumps_method: Callable = msgpack.dumps
     loads_method: Callable = msgpack.loads
