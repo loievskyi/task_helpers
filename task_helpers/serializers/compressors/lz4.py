@@ -1,20 +1,13 @@
 import lz4.frame
-from .base import Compressor
+from .base import LeveledCompressor
 
 
-class Lz4Compressor(Compressor):
+class Lz4Compressor(LeveledCompressor):
     """Handles data compression using LZ4 algorithm"""
 
-    def __init__(self, level: int = 9):
-        """
-        Args:
-            level: from 1 to 16, where:
-                  0 = fastest compression
-                  16 = maximum compression
-        """
-        if not 0 <= level <= 16:
-            raise ValueError("lz4 compression level must be between 0 and 16")
-        self.level = level
+    MINIMAL_COMPRESSION_LEVEL = 0
+    MEDIUM_COMPRESSION_LEVEL = 8
+    MAXIMAL_COMPRESSION_LEVEL = 16
 
     def compress(self, data: bytes) -> bytes:
         """Compress bytes using LZ4"""

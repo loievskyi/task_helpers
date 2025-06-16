@@ -1,21 +1,13 @@
 import gzip
-from .base import Compressor
+from .base import LeveledCompressor
 
 
-class GzipCompressor(Compressor):
+class GzipCompressor(LeveledCompressor):
     """Handles data compression using gzip algorithm"""
 
-    def __init__(self, level: int = 9):
-        """
-        Args:
-            level: from 0 to 9, where:
-                  0 = no compression
-                  1 = fastest compression
-                  9 = maximum compression
-        """
-        if not 0 <= level <= 9:
-            raise ValueError("Gzip compression level must be between 0 and 9")
-        self.level = level
+    MINIMAL_COMPRESSION_LEVEL = 1
+    MEDIUM_COMPRESSION_LEVEL = 5
+    MAXIMAL_COMPRESSION_LEVEL = 9
 
     def compress(self, data: bytes) -> bytes:
         return gzip.compress(data, compresslevel=self.level)

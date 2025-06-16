@@ -1,20 +1,13 @@
 import bz2
-from .base import Compressor
+from .base import LeveledCompressor
 
 
-class Bzip2Compressor(Compressor):
+class Bzip2Compressor(LeveledCompressor):
     """Handles data compression using bzip2 algorithm"""
 
-    def __init__(self, level: int = 9):
-        """
-        Args:
-            level: from 1 to 9, where:
-                  1 = fastest compression
-                  9 = maximum compression
-        """
-        if not 1 <= level <= 9:
-            raise ValueError("Bzip2 compression level must be between 1 and 9")
-        self.level = level
+    MINIMAL_COMPRESSION_LEVEL = 1
+    MEDIUM_COMPRESSION_LEVEL = 5
+    MAXIMAL_COMPRESSION_LEVEL = 9
 
     def compress(self, data: bytes) -> bytes:
         return bz2.compress(data, compresslevel=self.level)
