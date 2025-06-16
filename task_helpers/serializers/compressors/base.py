@@ -1,40 +1,44 @@
 from abc import ABC, abstractmethod
+from enum import Enum
+from typing import ClassVar
 
 
 class Compressor(ABC):
-    """Handles bytes compression"""
+    """Base interface for all compressors"""
 
     @abstractmethod
     def compress(self, data: bytes) -> bytes:
-        """Compress bytes data"""
+        """Compress input data"""
         pass
 
     @abstractmethod
     def decompress(self, data: bytes) -> bytes:
-        """Decompress bytes data"""
+        """Decompress input data"""
         pass
 
 
-class ConfigurableCompressor(Compressor):
-    """Wrapper for other compressors that allows compression level configuration"""
+class LeveledCompressor(Compressor, ABC):
+    """Base class for compressors that support compression levels"""
 
-    def __init__(self, base_compressor: Compressor, level: int):
-        self.base_compressor = base_compressor
+    MINIMAL_COMPRESSION_LEVEL: ClassVar[int]
+    MEDIUM_COMPRESSION_LEVEL: ClassVar[int]
+    MAXIMAL_COMPRESSION_LEVEL: ClassVar[int]
+
+    def __init__(self, level: int) -> None:
+        self._validate_level(level)
         self.level = level
 
-    def compress(self, data: bytes) -> bytes:
-        if hasattr(self.base_compressor, "level"):
-            self.base_compressor.level = self.level
-        return self.base_compressor.compress(data)
+    def _validate_level(self, level: int) -> None:
+        if not self.MINIMAL_COMPRESSION_LEVEL <= level <= self.MAXIMAL_COMPRESSION_LEVEL:
+            raise ValueError(
+                f"Compression level must be between "
+                f"{self.MINIMAL_COMPRESSION_LEVEL} and {self.MAXIMAL_COMPRESSION_LEVEL}"
+            )
 
-    def decompress(self, data: bytes) -> bytes:
-        return self.base_compressor.decompress(data)
 
-
-class NoCompression(Compressor):
-    """Wrapper for other compressors that allows compression level configuration"""
-    def compress(self, data: bytes) -> bytes:
-        return data
-
-    def decompress(self, data: bytes) -> bytes:
-        return data
+class CompressionPolicy(str, Enum):
+    """Defines different compression policies"""
+    NO_COMPRESSION = "no_compression"
+    MINIMAL_COMPRESSION = "minimal_compression"
+    MEDIUM_COMPRESSION = "medium_compression"
+    MAXIMAL_COMPRESSION = "maximal_compression"

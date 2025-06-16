@@ -1,20 +1,18 @@
-from .base import (
-    Compressor, ConfigurableCompressor, NoCompression)
-
+from .base import Compressor, LeveledCompressor
 from .bzip2 import Bzip2Compressor
-from ._gzip import GzipCompressor
+from .gzip import GzipCompressor
 from .lz4 import Lz4Compressor
-from ._lzma import LzmaCompressor
+from .lzma import LzmaCompressor
+from .plug import NoCompressionCompressor
 from .snappy import SnappyCompressor
 from .zlib import ZlibCompressor
 from .zstd import ZstdCompressor
 
-
 __all__ = [
     "Compressor",
-    "ConfigurableCompressor",
-    "NoCompression",
+    "LeveledCompressor",
 
+    "NoCompressionCompressor",
     "Bzip2Compressor",
     "GzipCompressor",
     "Lz4Compressor",
