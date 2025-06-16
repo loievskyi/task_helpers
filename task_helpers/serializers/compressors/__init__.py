@@ -1,6 +1,8 @@
-from .base import Compressor, ConfigurableCompressor
+from .base import (
+    Compressor, ConfigurableCompressor, NoCompression)
 
 __all__ = [
     "Compressor",
     "ConfigurableCompressor",
+    "NoCompression",
 ]

@@ -29,3 +29,12 @@ class ConfigurableCompressor(Compressor):
 
     def decompress(self, data: bytes) -> bytes:
         return self.base_compressor.decompress(data)
+
+
+class NoCompression(Compressor):
+    """Wrapper for other compressors that allows compression level configuration"""
+    def compress(self, data: bytes) -> bytes:
+        return data
+
+    def decompress(self, data: bytes) -> bytes:
+        return data
