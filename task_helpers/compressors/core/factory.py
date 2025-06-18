@@ -1,7 +1,7 @@
 from typing import Type
 
-from task_helpers.compressors import LeveledCompressor, Compressor
-from task_helpers.compressors.core.enums import CompressionPolicy, CompressorType
+from .base import LeveledCompressor, Compressor
+from .enums import CompressionPolicy, CompressorType
 
 
 class CompressorFactory:

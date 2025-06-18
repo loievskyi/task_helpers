@@ -1,5 +1,6 @@
 import gzip
-from task_helpers.compressors.core.base import LeveledCompressor
+
+from ..core.base import LeveledCompressor
 
 
 class GzipCompressor(LeveledCompressor):

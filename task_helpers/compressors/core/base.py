@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import ClassVar
 
-from task_helpers.compressors import CompressionError
-
 
 class Compressor(ABC):
     """Base interface for all compressors"""

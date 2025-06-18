@@ -1,5 +1,6 @@
 import snappy
-from task_helpers.compressors.core.base import Compressor
+
+from ..core.base import Compressor
 
 
 class SnappyCompressor(Compressor):

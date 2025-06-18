@@ -7,7 +7,6 @@ from .snappy import SnappyCompressor
 from .zlib import ZlibCompressor
 from .zstd import ZstdCompressor
 
-
 __all__ = [
     "NoCompressionCompressor",
     "Bzip2Compressor",

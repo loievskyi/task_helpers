@@ -1,9 +1,7 @@
 """Compression module providing a unified interface to various compression algorithms"""
 
-from .core.base import Compressor, LeveledCompressor
+from .core import Compressor, LeveledCompressor, CompressorFactory, compressors_enums
 from .core.enums import CompressionPolicy, CompressorType
-from .core.factory import CompressorFactory
-from .core.exceptions import CompressionError
 
 __all__ = [
     # Core interfaces
@@ -14,7 +12,4 @@ __all__ = [
     # Enums
     "CompressionPolicy",
     "CompressorType",
-
-    # Exceptions
-    "CompressionError",
 ]

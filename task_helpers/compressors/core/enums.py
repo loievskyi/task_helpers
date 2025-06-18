@@ -1,7 +1,8 @@
 from enum import Enum
 from typing import Type
 
-from task_helpers.compressors import backends, Compressor
+from .base import Compressor
+from .. import backends
 
 
 class CompressionPolicy(str, Enum):
