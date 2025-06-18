@@ -1,4 +1,3 @@
-from .base import Compressor, LeveledCompressor
 from .bzip2 import Bzip2Compressor
 from .gzip import GzipCompressor
 from .lz4 import Lz4Compressor
@@ -8,10 +7,8 @@ from .snappy import SnappyCompressor
 from .zlib import ZlibCompressor
 from .zstd import ZstdCompressor
 
-__all__ = [
-    "Compressor",
-    "LeveledCompressor",
 
+__all__ = [
     "NoCompressionCompressor",
     "Bzip2Compressor",
     "GzipCompressor",

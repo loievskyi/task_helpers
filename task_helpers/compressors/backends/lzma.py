@@ -1,5 +1,5 @@
 import lzma
-from .base import LeveledCompressor
+from task_helpers.compressors.core.base import LeveledCompressor
 
 
 class LzmaCompressor(LeveledCompressor):

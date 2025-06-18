@@ -1,8 +1,8 @@
-from .base import Compressor
+from task_helpers.compressors.core.base import Compressor
 
 
 class NoCompressionCompressor(Compressor):
-    """Compressor that performs no compression"""
+    """CompressorType that performs no compression"""
 
     def compress(self, data: bytes) -> bytes:
         """Return data as is without compression"""

@@ -1,5 +1,5 @@
 import lz4.frame
-from .base import LeveledCompressor
+from task_helpers.compressors.core.base import LeveledCompressor
 
 
 class Lz4Compressor(LeveledCompressor):

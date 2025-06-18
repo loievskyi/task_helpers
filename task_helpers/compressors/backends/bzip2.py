@@ -1,5 +1,5 @@
 import bz2
-from .base import LeveledCompressor
+from task_helpers.compressors.core.base import LeveledCompressor
 
 
 class Bzip2Compressor(LeveledCompressor):
