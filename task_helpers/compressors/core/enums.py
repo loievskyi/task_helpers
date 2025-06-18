@@ -17,7 +17,7 @@ class CompressorType(Enum):
     GZIP = backends.GzipCompressor
     LZ4 = backends.Lz4Compressor
     LZMA = backends.LzmaCompressor
-    SNAPPY = backends.snappy
+    SNAPPY = backends.SnappyCompressor
     ZLIB = backends.ZlibCompressor
     ZSTD = backends.ZstdCompressor
     NO_COMPRESSION = backends.NoCompressionCompressor
