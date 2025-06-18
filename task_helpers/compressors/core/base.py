@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from enum import Enum
 from typing import ClassVar
+
+from task_helpers.compressors import CompressionError
 
 
 class Compressor(ABC):
@@ -9,12 +10,10 @@ class Compressor(ABC):
     @abstractmethod
     def compress(self, data: bytes) -> bytes:
         """Compress input data"""
-        pass
 
     @abstractmethod
     def decompress(self, data: bytes) -> bytes:
         """Decompress input data"""
-        pass
 
 
 class LeveledCompressor(Compressor, ABC):
@@ -34,11 +33,3 @@ class LeveledCompressor(Compressor, ABC):
                 f"Compression level must be between "
                 f"{self.MINIMAL_COMPRESSION_LEVEL} and {self.MAXIMAL_COMPRESSION_LEVEL}"
             )
-
-
-class CompressionPolicy(str, Enum):
-    """Defines different compression policies"""
-    NO_COMPRESSION = "no_compression"
-    MINIMAL_COMPRESSION = "minimal_compression"
-    MEDIUM_COMPRESSION = "medium_compression"
-    MAXIMAL_COMPRESSION = "maximal_compression"
