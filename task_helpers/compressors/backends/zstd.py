@@ -7,7 +7,7 @@ class ZstdCompressor(LeveledCompressor):
     """Handles data compression using the Zstandard algorithm"""
 
     MINIMAL_COMPRESSION_LEVEL = 1
-    MEDIUM_COMPRESSION_LEVEL = 10
+    MEDIUM_COMPRESSION_LEVEL = 3
     MAXIMAL_COMPRESSION_LEVEL = 22
 
     def __init__(self, level: int = 3):
