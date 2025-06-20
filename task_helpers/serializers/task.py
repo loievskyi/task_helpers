@@ -1,9 +1,10 @@
-from task_helpers.tasks import Task
-from task_helpers.converters import TaskTupleConverter, BytesConverter
 from task_helpers.compressors import Compressor
+from task_helpers.converters import TaskTupleConverter, BytesConverter
+from task_helpers.tasks import Task
+from .base import Serializer
 
 
-class TaskSerializer:
+class TaskSerializer(Serializer[Task, bytes]):
     """Main class that combines all serialization stages"""
 
     def __init__(
