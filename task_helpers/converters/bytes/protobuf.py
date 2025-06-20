@@ -1,11 +1,13 @@
 from typing import Type, TypeVar
+
 from google.protobuf.message import Message
 
-from ..base import Converter
+from .base import BytesConverter, Converter
 
 Source = TypeVar("Source", bound=Message)
 
-class ProtobufConverter(Converter[Source, bytes]):
+
+class ProtobufConverter(BytesConverter, Converter[Source, bytes]):
     def __init__(self, message_class: Type[Source]):
         self.message_class = message_class
 

@@ -1,11 +1,11 @@
 import csv
-from typing import List, Any
+from typing import List
 from io import StringIO
 
-from ..base import Converter
+from .base import BytesConverter, Converter
 
 
-class CsvConverter(Converter[List[dict], bytes]):
+class CsvConverter(BytesConverter, Converter[List[dict], bytes]):
     def encode(self, source: List[dict]) -> bytes:
         if not source:
             return b""

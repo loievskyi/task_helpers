@@ -12,9 +12,7 @@ class Converter(Generic[SourceType, TargetType], ABC):
     @abstractmethod
     def encode(self, source: SourceType) -> TargetType:
         """Convert a source object to target representation"""
-        pass
 
     @abstractmethod
     def decode(self, target: TargetType) -> SourceType:
         """Restore a source object from target representation"""
-        pass

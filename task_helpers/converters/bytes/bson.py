@@ -1,10 +1,10 @@
 import bson
 from typing import Dict
 
-from ..base import Converter
+from .base import BytesConverter, Converter
 
 
-class BsonConverter(Converter[Dict, bytes]):
+class BsonConverter(BytesConverter, Converter[Dict, bytes]):
     def encode(self, source: Dict) -> bytes:
         return bson.dumps(source)
 

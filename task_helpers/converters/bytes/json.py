@@ -1,10 +1,10 @@
 import json
 from typing import Any
 
-from ..base import Converter
+from .base import BytesConverter, Converter
 
 
-class JsonConverter(Converter[Any, bytes]):
+class JsonConverter(BytesConverter, Converter[Any, bytes]):
     def encode(self, source: Any) -> bytes:
         return json.dumps(source).encode("utf-8")
 

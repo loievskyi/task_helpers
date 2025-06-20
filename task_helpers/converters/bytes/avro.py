@@ -1,12 +1,12 @@
 import avro.schema
 from avro.io import DatumWriter, DatumReader, BinaryEncoder, BinaryDecoder
-from typing import Any, Dict
+from typing import Dict
 import io
 
-from ..base import Converter
+from .base import BytesConverter, Converter
 
 
-class AvroConverter(Converter[Dict, bytes]):
+class AvroConverter(BytesConverter, Converter[Dict, bytes]):
     def __init__(self, schema_str: str):
         """
         Args:

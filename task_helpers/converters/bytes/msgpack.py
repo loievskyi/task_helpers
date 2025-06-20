@@ -1,10 +1,10 @@
 import msgpack
 from typing import Any
 
-from ..base import Converter
+from .base import BytesConverter, Converter
 
 
-class MsgPackConverter(Converter[Any, bytes]):
+class MsgPackConverter(BytesConverter, Converter[Any, bytes]):
     def encode(self, source: Any) -> bytes:
         return msgpack.packb(source)
 
