@@ -65,6 +65,7 @@ def test_should_preserve_nested_structure(converter):
         "list": [1, 2, 3],
         "dict": {"inner": "value"},
         "tuple": (1, "test"),
+        "set": {1, 2, 3, 4, 5},
         "object": SampleClass("nested", 100)
     }
 
@@ -75,6 +76,7 @@ def test_should_preserve_nested_structure(converter):
     assert isinstance(decoded["list"], list)
     assert isinstance(decoded["dict"], dict)
     assert isinstance(decoded["tuple"], tuple)
+    assert isinstance(decoded["set"], set)
     assert isinstance(decoded["object"], SampleClass)
 
 
