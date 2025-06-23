@@ -11,9 +11,7 @@ class Serializer(ABC, Generic[SourceType, TargetType]):
     @abstractmethod
     def serialize(self, data: SourceType) -> TargetType:
         """Convert source data to the target format"""
-        pass
 
     @abstractmethod
     def deserialize(self, data: TargetType) -> SourceType:
         """Restore source data from target format"""
-        pass
