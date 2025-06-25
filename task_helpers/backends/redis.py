@@ -4,9 +4,10 @@ from typing import Type, Generator
 import redis
 
 from task_helpers.exceptions import DoesNotExistError
+from .base import Backend
 
 
-class RedisBackend:
+class RedisBackend(Backend):
     def __init__(self, redis_client: redis.Redis):
         self.redis_client = redis_client
 
