@@ -11,7 +11,10 @@ class RedisBackend:
         self.redis_client = redis_client
 
     def get(self, key: str) -> bytes:
-        return self.redis_client.get(key)
+        result: bytes = self.redis_client.get(key)
+        if result is None:
+            raise DoesNotExistError
+        return bytes(result)
 
     def set(self, key: str, value: bytes) -> None:
         self.redis_client.set(key, value)
@@ -51,13 +54,13 @@ class RedisBackend:
                                             error_class)
 
     def exists(self, key: str) -> bool:
-        return self.redis_client.exists(key)
+        return bool(self.redis_client.exists(key))
 
     def expire(self, key: str, seconds: int) -> None:
         self.redis_client.expire(key, seconds)
 
     @contextmanager
-    def pipeline(self) -> Generator["RedisBackend"]:
+    def pipeline(self) -> Generator["RedisBackend", None, None]:
         pipeline = self.redis_client.pipeline()
         try:
             yield self.__class__(pipeline)
