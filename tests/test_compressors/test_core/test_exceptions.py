@@ -2,7 +2,7 @@ from task_helpers.compressors.core.exceptions import CompressionError, Unsupport
 
 
 def test_compression_error():
-    base_exc = ValueError("test error")
+    base_exc = ValueError("test error_class")
     exc = CompressionError(base_exc)
     assert exc.base_exception == base_exc
 
