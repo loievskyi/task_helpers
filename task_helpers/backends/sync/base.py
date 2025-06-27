@@ -5,11 +5,7 @@ from typing import Type, Generator
 from task_helpers.exceptions import DoesNotExistError
 
 
-class Backend(ABC):
-    @abstractmethod
-    def get(self, key: str) -> bytes:
-        """Get value by key."""
-
+class WriteOnlyBackend(ABC):
     @abstractmethod
     def set(self, key: str, value: bytes) -> None:
         """Set value by key."""
@@ -21,6 +17,21 @@ class Backend(ABC):
     @abstractmethod
     def bulk_add_to_queue(self, queue_name: str, data: list[bytes]) -> None:
         """Add multiple items to queue."""
+
+    @abstractmethod
+    def expire(self, key: str, seconds: int) -> None:
+        """Set the expiration time for a key."""
+
+    @abstractmethod
+    @contextmanager
+    def pipeline(self) -> Generator["WriteOnlyBackend", None, None]:
+        """Create a pipeline for batch operations."""
+
+
+class Backend(WriteOnlyBackend, ABC):
+    @abstractmethod
+    def get(self, key: str) -> bytes:
+        """Get value by key."""
 
     @abstractmethod
     def pop_from_queue(self, queue_name: str, error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
@@ -46,25 +57,16 @@ class Backend(ABC):
 
     @abstractmethod
     def pop_or_requeue(self, queue_name: str,
-                       delete_data: bool = True,
-                       error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
+                      delete_data: bool = True,
+                      error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
         """Pop item from queue or requeue it back."""
 
     @abstractmethod
     def pop_or_requeue_blocking(self, queue_name: str,
-                                delete_data: bool = True,
-                                timeout_seconds: int = None) -> bytes:
+                               delete_data: bool = True,
+                               timeout_seconds: int = None) -> bytes:
         """Pop item from queue or requeue it back with blocking."""
 
     @abstractmethod
     def exists(self, key: str) -> bool:
         """Check if the key exists."""
-
-    @abstractmethod
-    def expire(self, key: str, seconds: int) -> None:
-        """Set the expiration time for a key."""
-
-    @abstractmethod
-    @contextmanager
-    def pipeline(self) -> Generator["Backend", None, None]:
-        """Create a pipeline for batch operations."""

@@ -1,15 +1,11 @@
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
-from typing import Generator, Type
+from typing import AsyncGenerator, Type
 
 from task_helpers.exceptions import DoesNotExistError
 
 
-class AsyncBackend(ABC):
-    @abstractmethod
-    async def get(self, key: str) -> bytes:
-        """Get value by key."""
-
+class AsyncWriteOnlyBackend(ABC):
     @abstractmethod
     async def set(self, key: str, value: bytes) -> None:
         """Set value by key."""
@@ -21,6 +17,21 @@ class AsyncBackend(ABC):
     @abstractmethod
     async def bulk_add_to_queue(self, queue_name: str, data: list[bytes]) -> None:
         """Add multiple items to queue."""
+
+    @abstractmethod
+    async def expire(self, key: str, seconds: int) -> None:
+        """Set the expiration time for a key."""
+
+    @abstractmethod
+    @asynccontextmanager
+    async def pipeline(self) -> AsyncGenerator["AsyncWriteOnlyBackend", None]:
+        """Create a pipeline for batch operations."""
+
+
+class AsyncBackend(AsyncWriteOnlyBackend, ABC):
+    @abstractmethod
+    async def get(self, key: str) -> bytes:
+        """Get value by key."""
 
     @abstractmethod
     async def pop_from_queue(self, queue_name: str, error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
@@ -36,35 +47,26 @@ class AsyncBackend(ABC):
 
     @abstractmethod
     async def move_between_queues(self, source_queue_name: str, target_queue_name: str,
-                           error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
+                                error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
         """Move a single item between queues."""
 
     @abstractmethod
     async def move_between_queues_blocking(self, source_queue_name: str, target_queue_name: str,
-                                   timeout_seconds: int = None) -> bytes:
+                                         timeout_seconds: int = None) -> bytes:
         """Move a single item between queues with blocking."""
 
     @abstractmethod
     async def pop_or_requeue(self, queue_name: str,
-                      delete_data: bool = True,
-                      error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
+                           delete_data: bool = True,
+                           error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
         """Pop item from queue or requeue it back."""
 
     @abstractmethod
     async def pop_or_requeue_blocking(self, queue_name: str,
-                               delete_data: bool = True,
-                               timeout_seconds: int = None) -> bytes:
+                                    delete_data: bool = True,
+                                    timeout_seconds: int = None) -> bytes:
         """Pop item from queue or requeue it back with blocking."""
 
     @abstractmethod
     async def exists(self, key: str) -> bool:
         """Check if the key exists."""
-
-    @abstractmethod
-    async def expire(self, key: str, seconds: int) -> None:
-        """Set the expiration time for a key."""
-
-    @abstractmethod
-    @asynccontextmanager
-    async def pipeline(self) -> Generator["AsyncBackend", None, None]:
-        """Create a pipeline for batch operations."""
