@@ -3,7 +3,7 @@ import time
 import pytest
 import redis
 
-from task_helpers.backends.redis import RedisBackend
+from task_helpers.backends.sync import RedisBackend
 from task_helpers.exceptions import DoesNotExistError
 
 
@@ -14,7 +14,7 @@ def mock_redis_client() -> redis.Redis:
 
 @pytest.fixture
 def redis_backend(mock_redis_client) -> RedisBackend:
-    """Create a clean RedisBackend instance for each test"""
+    """Create a clean AsyncRedisBackend instance for each test"""
     mock_redis_client.flushdb()
     return RedisBackend(mock_redis_client)
 
@@ -88,7 +88,7 @@ class TestRedisBackend:
         assert results == [b"data1", b"data2"]
 
     def test_bulk_pop_all_remaining_items(self, redis_backend):
-        """Test getting all items with count larger than queue size"""
+        """Test getting all items with max_count larger than queue size"""
         queue_name = "test_queue"
         data = [b"data1", b"data2"]
         redis_backend.bulk_add_to_queue(queue_name, data)

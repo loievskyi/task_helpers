@@ -31,29 +31,29 @@ class Backend(ABC):
         """Pop single item from queue with blocking."""
 
     @abstractmethod
-    def bulk_pop_from_queue(self, queue_name: str, count: int) -> list[bytes]:
+    def bulk_pop_from_queue(self, queue_name: str, max_count: int) -> list[bytes]:
         """Pop multiple items from queue."""
 
     @abstractmethod
     def move_between_queues(self, source_queue_name: str, target_queue_name: str,
-                           error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
+                            error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
         """Move a single item between queues."""
 
     @abstractmethod
     def move_between_queues_blocking(self, source_queue_name: str, target_queue_name: str,
-                                   timeout_seconds: int = None) -> bytes:
+                                     timeout_seconds: int = None) -> bytes:
         """Move a single item between queues with blocking."""
 
     @abstractmethod
     def pop_or_requeue(self, queue_name: str,
-                      delete_data: bool = True,
-                      error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
+                       delete_data: bool = True,
+                       error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
         """Pop item from queue or requeue it back."""
 
     @abstractmethod
     def pop_or_requeue_blocking(self, queue_name: str,
-                               delete_data: bool = True,
-                               timeout_seconds: int = None) -> bytes:
+                                delete_data: bool = True,
+                                timeout_seconds: int = None) -> bytes:
         """Pop item from queue or requeue it back with blocking."""
 
     @abstractmethod
