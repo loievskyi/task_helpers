@@ -1,11 +1,18 @@
+import asyncio
+import functools
 import pickle
 import random
 import string
+import threading
+import time
 import uuid
-from typing import Callable, Type, Any, Tuple
+from typing import Callable, Type, Any
 
 import pytest
+import redis
 
+from task_helpers.backends.sync import Backend
+from task_helpers.backends.sync import RedisBackend
 from task_helpers.compressors.core.base import LeveledCompressor, Compressor
 from task_helpers.converters import TaskTupleConverter, BytesConverter
 from task_helpers.serializers.base import Serializer
@@ -144,3 +151,109 @@ class BytesConverterMock(BytesConverter):
 @pytest.fixture
 def mock_bytes_converter() -> BytesConverter:
     return BytesConverterMock()
+
+
+@pytest.fixture
+def mock_redis_connection() -> redis.Redis:
+    """Returns a Redis connection"""
+    connection = redis.Redis(decode_responses=False)
+    connection.flushdb()
+    return connection
+
+
+@pytest.fixture
+def mock_redis_backend(mock_redis_connection: redis.Redis) -> RedisBackend:
+    return RedisBackend(mock_redis_connection)
+
+
+# temporary
+@pytest.fixture
+def mock_backend(mock_redis_backend) -> Backend:
+    return mock_redis_backend
+
+
+def assert_blocks_longer_than(seconds: float, timeout: float = None):
+    """
+    Decorator to assert that a synchronous function blocks for at least `seconds`.
+
+    Parameters:
+    - seconds: Minimum time the function should block.
+    - timeout: Maximum time to wait for the function to finish. Prevents test from hanging forever.
+               If not set, defaults to `seconds + 1`.
+
+    Raises:
+    - AssertionError if the function completes before `seconds` seconds.
+    """
+    if timeout is None:
+        timeout = seconds + 1
+
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            thread = threading.Thread(target=func, args=args, kwargs=kwargs)
+            thread.daemon = True
+            start = time.perf_counter()
+            thread.start()
+
+            # Wait only for the minimum expected blocking time
+            thread.join(timeout=seconds)
+            duration = time.perf_counter() - start
+
+            if not thread.is_alive():
+                raise AssertionError(
+                    f"Function returned too early: {duration:.2f} seconds (expected > {seconds})"
+                )
+
+            # Optionally give it a little more time to finish, to avoid hanging the test
+            thread.join(timeout=(timeout - seconds))
+            return True  # Just confirms the function blocked as expected
+        return wrapper
+    return decorator
+
+
+def assert_async_blocks_longer_than(seconds: float, timeout: float = None):
+    """
+    Decorator to assert that an async function blocks for at least `seconds`.
+
+    Parameters:
+    - seconds: Minimum expected blocking time.
+    - timeout: Maximum wait time before cancelling (defaults to seconds + 1).
+
+    Raises:
+    - AssertionError if the function finishes earlier than expected.
+    """
+    if timeout is None:
+        timeout = seconds + 1
+
+    def decorator(func):
+        @functools.wraps(func)
+        async def wrapper(*args, **kwargs):
+            task = asyncio.create_task(func(*args, **kwargs))
+            start = time.perf_counter()
+
+            try:
+                # If a function returns too quickly — it's an error
+                await asyncio.wait_for(task, timeout=seconds)
+                duration = time.perf_counter() - start
+                raise AssertionError(
+                    f"Function returned too early: {duration:.2f} seconds (expected > {seconds})"
+                )
+            except asyncio.TimeoutError:
+                # Good: function did not finish within `seconds`
+                pass
+
+            duration = time.perf_counter() - start
+            assert duration >= seconds, f"Function returned too early: {duration:.2f} seconds"
+
+            # Cancel the task to avoid hanging
+            task.cancel()
+            try:
+                await asyncio.wait_for(task, timeout=timeout - seconds)
+            except asyncio.CancelledError:
+                pass
+            except asyncio.TimeoutError:
+                pass
+
+            return True
+        return wrapper
+    return decorator
