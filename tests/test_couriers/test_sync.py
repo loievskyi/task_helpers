@@ -1,3 +1,5 @@
+import threading
+import time
 import uuid
 
 import pytest
@@ -141,6 +143,29 @@ class TestCourier:
         # verify result not deleted
         task_result = mock_courier.get_task_result(queue_name, task_id, delete_data=False)
         assert task_result == excepted_task_result
+
+    def test_wait_for_task_result(self, mock_courier, sample_task_data):
+        def set_result(mock_courier_: Courier, queue_name_, task_id_, task_result_, sleep_seconds_):
+            time.sleep(sleep_seconds_)
+            mock_courier_.return_task_result(queue_name_, task_id_, task_result_)
+
+        task_id = uuid.uuid4()
+        queue_name = "test_queue_name"
+        thread = threading.Thread(target=set_result, kwargs={
+            "mock_courier_": mock_courier,
+            "queue_name_": queue_name,
+            "task_id_": task_id,
+            "task_result_": sample_task_data,
+            "sleep_seconds_": 1,
+        })
+        thread.start()
+
+        real_task_result = mock_courier.wait_for_task_result(
+            queue_name="test_queue_name",
+            task_id=task_id,
+            delete_data=True)
+
+        assert real_task_result == sample_task_data
 
     def test_wait_for_task_result_with_timeout(self, mock_courier):
         task_id = uuid.uuid4()
