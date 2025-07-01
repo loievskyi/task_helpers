@@ -28,7 +28,7 @@ class AsyncRedisWriteOnlyBackend(AsyncWriteOnlyBackend):
         await self.redis_client.expire(key, seconds)
 
     @asynccontextmanager
-    async def pipeline(self) -> AsyncGenerator["AsyncWriteOnlyBackend", None]:
+    async def pipeline(self) -> AsyncGenerator["AsyncWriteOnlyBackend", "AsyncWriteOnlyBackend"]:
         """Create a Redis pipeline for atomic operations"""
         pipeline = self.redis_client.pipeline()
         try:

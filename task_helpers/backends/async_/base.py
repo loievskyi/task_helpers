@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Type
+from typing import Type, AsyncContextManager
 
 from task_helpers.exceptions import DoesNotExistError
 
@@ -23,8 +22,7 @@ class AsyncWriteOnlyBackend(ABC):
         """Set the expiration time for a key."""
 
     @abstractmethod
-    @asynccontextmanager
-    async def pipeline(self) -> AsyncGenerator["AsyncWriteOnlyBackend", None]:
+    def pipeline(self) -> AsyncContextManager["AsyncWriteOnlyBackend"]:
         """Create a pipeline for batch operations."""
 
 
@@ -47,24 +45,24 @@ class AsyncBackend(AsyncWriteOnlyBackend, ABC):
 
     @abstractmethod
     async def move_between_queues(self, source_queue_name: str, target_queue_name: str,
-                                error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
+                                  error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
         """Move a single item between queues."""
 
     @abstractmethod
     async def move_between_queues_blocking(self, source_queue_name: str, target_queue_name: str,
-                                         timeout_seconds: int = None) -> bytes:
+                                           timeout_seconds: int = None) -> bytes:
         """Move a single item between queues with blocking."""
 
     @abstractmethod
     async def pop_or_requeue(self, queue_name: str,
-                           delete_data: bool = True,
-                           error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
+                             delete_data: bool = True,
+                             error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
         """Pop item from queue or requeue it back."""
 
     @abstractmethod
     async def pop_or_requeue_blocking(self, queue_name: str,
-                                    delete_data: bool = True,
-                                    timeout_seconds: int = None) -> bytes:
+                                      delete_data: bool = True,
+                                      timeout_seconds: int = None) -> bytes:
         """Pop item from queue or requeue it back with blocking."""
 
     @abstractmethod
