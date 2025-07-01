@@ -1,0 +1,173 @@
+import uuid
+
+import pytest
+
+from task_helpers.backends.sync import Backend
+from task_helpers.couriers import Courier
+from task_helpers.exceptions import TaskResultDoesNotExist
+from task_helpers.serializers import TaskSerializer, TaskResultSerializer
+from task_helpers.tasks import Task
+from tests.conftest import mock_task_serializer, mock_task_result_serializer, mock_backend, assert_blocks_longer_than
+
+
+class TestCourier:
+    @pytest.fixture
+    def mock_courier(self, mock_backend: Backend,
+                     mock_task_serializer: TaskSerializer,
+                     mock_task_result_serializer: TaskResultSerializer):
+        return Courier(
+            task_serializer=mock_task_serializer,
+            task_result_serializer=mock_task_result_serializer,
+            backend=mock_backend,
+            prefix_queue="test_prefix"
+        )
+
+    @pytest.fixture(params=[
+        pytest.param(("simple", "value"), id="simple_data"),
+        pytest.param({"url": "https://test.com"}, id="dict_data"),
+        pytest.param(["list", "of", "strings"], id="list_data"),
+    ])
+    def sample_task_data(self, request):
+        return request.param
+
+    def test_add_task_to_queue(self, mock_courier, sample_task_data):
+        task_id = mock_courier.add_task_to_queue("test_queue", sample_task_data)
+        assert isinstance(task_id, uuid.UUID)
+
+    def test_add_task_to_queue_get_task(self, mock_courier, sample_task_data):
+        queue_name = "test_queue_name"
+        task_id = mock_courier.add_task_to_queue(queue_name, sample_task_data)
+        task = mock_courier.get_task(queue_name)
+        assert isinstance(task, Task)
+        assert task.id == task_id
+        assert task.data == sample_task_data
+
+    def test_courier_queue_works_as_fifo(self, mock_courier):
+        queue_name = "test_queue_name"
+        first_task_data = {
+            "id": 123,
+            "function": "test_function",
+            "args": ("arg1", "arg2"),
+        }
+        second_task_data = {
+            "id": 456,
+            "function": "test_function",
+            "args": ("arg3", "arg4"),
+        }
+
+        first_task_id = mock_courier.add_task_to_queue(queue_name, first_task_data)
+        second_task_id = mock_courier.add_task_to_queue(queue_name, second_task_data)
+        first_task = mock_courier.get_task(queue_name)
+        second_task = mock_courier.get_task(queue_name)
+        assert first_task_id == first_task.id
+        assert first_task_data == first_task.data
+        assert second_task_id == second_task.id
+        assert second_task_data == second_task.data
+
+    def test_bulk_add_task_to_queue(self, mock_courier, sample_task_data):
+        tasks_data = [sample_task_data] * 10
+        tasks_ids = mock_courier.bulk_add_tasks_to_queue("test_queue", tasks_data)
+        assert len(tasks_ids) == len(tasks_data)
+
+    def test_bulk_add_task_to_queue_if_no_data_provided(self, mock_courier):
+        tasks_data = []
+        tasks_ids = mock_courier.bulk_add_tasks_to_queue("test_queue", tasks_data)
+        assert len(tasks_ids) == 0
+
+    def test_bulk_add_task_to_queue_adds_as_fifo(self, mock_courier):
+        queue_name = "test_queue_name"
+        count_tasks = 10
+
+        tasks_data = [f"task_data_{n}" for n in range(count_tasks)]
+        tasks_ids = mock_courier.bulk_add_tasks_to_queue(queue_name, tasks_data)
+
+        for n in range(count_tasks):
+            task_id = tasks_ids[n]
+            task = mock_courier.get_task(queue_name)
+            assert task.id == task_id
+            assert task.data == tasks_data[n]
+
+    def test_get_task_result_if_result_exists_with_delete_data_true(self, mock_courier):
+        task_id = uuid.uuid4()
+        excepted_task_result = "test_task_result"
+        queue_name = "test_queue"
+        mock_courier.return_task_result("test_queue", task_id, excepted_task_result)
+        task_result = mock_courier.get_task_result(queue_name, task_id, delete_data=True)
+        assert task_result == excepted_task_result
+        with pytest.raises(TaskResultDoesNotExist):
+            mock_courier.get_task_result(queue_name, task_id)
+
+    def test_get_task_result_if_result_exists_with_delete_data_false(self, mock_courier):
+        task_id = uuid.uuid4()
+        excepted_task_result = "test_task_result"
+        queue_name = "test_queue"
+        mock_courier.return_task_result("test_queue", task_id, excepted_task_result)
+        task_result = mock_courier.get_task_result(queue_name, task_id, delete_data=False)
+        assert task_result == excepted_task_result
+
+        task_result = mock_courier.get_task_result(queue_name, task_id, delete_data=False)
+        assert task_result == excepted_task_result
+
+    def test_get_task_result_if_result_not_exists_with_delete_data_true(self, mock_courier):
+        task_id = uuid.uuid4()
+        with pytest.raises(TaskResultDoesNotExist):
+            mock_courier.get_task_result("test_queue", task_id, delete_data=True)
+
+    def test_get_task_result_if_result_not_exists_with_delete_data_false(self, mock_courier):
+        task_id = uuid.uuid4()
+        with pytest.raises(TaskResultDoesNotExist):
+            mock_courier.get_task_result("test_queue", task_id, delete_data=False)
+
+    def test_wait_for_task_result_with_delete_data_true(self, mock_courier):
+        task_id = uuid.uuid4()
+        excepted_task_result = "test_task_result"
+        queue_name = "test_queue"
+        mock_courier.return_task_result("test_queue", task_id, excepted_task_result)
+        task_result = mock_courier.wait_for_task_result(queue_name, task_id, delete_data=True)
+        assert task_result == excepted_task_result
+
+        # verify result deletion
+        with pytest.raises(TaskResultDoesNotExist):
+            mock_courier.get_task_result(queue_name, task_id)
+
+    def test_wait_for_task_result_with_delete_data_false(self, mock_courier):
+        task_id = uuid.uuid4()
+        excepted_task_result = "test_task_result"
+        queue_name = "test_queue"
+        mock_courier.return_task_result("test_queue", task_id, excepted_task_result)
+        task_result = mock_courier.wait_for_task_result(queue_name, task_id, delete_data=False)
+        assert task_result == excepted_task_result
+
+        # verify result not deleted
+        task_result = mock_courier.get_task_result(queue_name, task_id, delete_data=False)
+        assert task_result == excepted_task_result
+
+    def test_wait_for_task_result_with_timeout(self, mock_courier):
+        task_id = uuid.uuid4()
+        with pytest.raises(TimeoutError):
+            mock_courier.wait_for_task_result(
+                queue_name="test_queue_name",
+                task_id=task_id,
+                timeout_seconds=1)
+
+    @assert_blocks_longer_than(1)
+    def test_wait_for_task_result_without_timeout(self, mock_courier):
+        task_id = uuid.uuid4()
+        mock_courier.wait_for_task_result(
+            queue_name="test_queue_name",
+            task_id=task_id
+        )
+
+    def test_check_for_done_if_result_not_exists(self, mock_courier):
+        task_id = uuid.uuid4()
+        exists = mock_courier.check_for_done("test_queue", task_id)
+        assert isinstance(exists, bool)
+        assert not exists
+
+    def test_check_for_done_if_result_exists(self, mock_courier):
+        task_id = uuid.uuid4()
+        task_result = "test_task_result"
+        mock_courier.return_task_result("test_queue", task_id, task_result)
+        exists = mock_courier.check_for_done("test_queue", task_id)
+        assert isinstance(exists, bool)
+        assert exists
