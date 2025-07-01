@@ -60,25 +60,7 @@ class ClientSideCourier(QueueNameMixin):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    def get_task_result(self, queue_name, task_id, delete_data=True):
-        queue_name = self._get_full_queue_name(queue_name, "results:") + str(task_id)
-        raw_data = self.backend.pop_or_requeue(queue_name, delete_data=delete_data,
-                                               error_class=exceptions.TaskResultDoesNotExist)
-        return self.task_result_serializer.deserialize(raw_data)
-
-    def wait_for_task_result(self, queue_name, task_id, delete_data=True, timeout_seconds=None):
-        queue_name = self._get_full_queue_name(queue_name, "results:") + str(task_id)
-        raw_data = self.backend.pop_or_requeue_blocking(queue_name, delete_data=delete_data,
-                                                        timeout_seconds=timeout_seconds)
-        return self.task_result_serializer.deserialize(raw_data)
-
     def add_task_to_queue(self, queue_name, task_data):
-        """Adds one task to the queue for processing. Returns task_id.
-        Client side method.
-
-        - queue_name - queue name, used in the add_task_to_queue method.
-        - task_data - task objects, what will be added to redis queue."""
-
         queue_name = self._get_full_queue_name(queue_name=queue_name, suffix="pending")
         task = self._generate_task(task_data)
         serialized_task = self.task_serializer.serialize(task)
@@ -94,6 +76,18 @@ class ClientSideCourier(QueueNameMixin):
         serialized_tasks = [self.task_serializer.serialize(task) for task in tasks]
         self.backend.bulk_add_to_queue(queue_name, serialized_tasks)
         return [task.id for task in tasks]
+
+    def get_task_result(self, queue_name, task_id, delete_data=True):
+        queue_name = self._get_full_queue_name(queue_name, "results:") + str(task_id)
+        raw_data = self.backend.pop_or_requeue(queue_name, delete_data=delete_data,
+                                               error_class=exceptions.TaskResultDoesNotExist)
+        return self.task_result_serializer.deserialize(raw_data)
+
+    def wait_for_task_result(self, queue_name, task_id, delete_data=True, timeout_seconds=None):
+        queue_name = self._get_full_queue_name(queue_name, "results:") + str(task_id)
+        raw_data = self.backend.pop_or_requeue_blocking(queue_name, delete_data=delete_data,
+                                                        timeout_seconds=timeout_seconds)
+        return self.task_result_serializer.deserialize(raw_data)
 
     def check_for_done(self, queue_name, task_id):
         queue_name = self._get_full_queue_name(queue_name, "results:") + str(task_id)
