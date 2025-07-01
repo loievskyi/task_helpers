@@ -57,14 +57,14 @@ class Backend(WriteOnlyBackend, ABC):
 
     @abstractmethod
     def pop_or_requeue(self, queue_name: str,
-                      delete_data: bool = True,
-                      error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
+                       delete_data: bool = True,
+                       error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
         """Pop item from queue or requeue it back."""
 
     @abstractmethod
     def pop_or_requeue_blocking(self, queue_name: str,
-                               delete_data: bool = True,
-                               timeout_seconds: int = None) -> bytes:
+                                delete_data: bool = True,
+                                timeout_seconds: int = None) -> bytes:
         """Pop item from queue or requeue it back with blocking."""
 
     @abstractmethod
