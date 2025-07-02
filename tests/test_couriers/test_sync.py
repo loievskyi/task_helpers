@@ -167,7 +167,7 @@ class TestCourier:
 
         assert real_task_result == sample_task_data
 
-    def test_wait_for_task_result_with_timeout(self, mock_courier):
+    def test_wait_for_task_result_without_result_with_timeout(self, mock_courier):
         task_id = uuid.uuid4()
         with pytest.raises(TimeoutError):
             mock_courier.wait_for_task_result(
@@ -176,7 +176,7 @@ class TestCourier:
                 timeout_seconds=1)
 
     @assert_blocks_longer_than(1)
-    def test_wait_for_task_result_without_timeout(self, mock_courier):
+    def test_wait_for_task_result_without_result_without_timeout(self, mock_courier):
         task_id = uuid.uuid4()
         mock_courier.wait_for_task_result(
             queue_name="test_queue_name",
@@ -229,6 +229,22 @@ class TestCourier:
         tasks = mock_courier.bulk_get_tasks("test_queue", max_count=10)
         assert len(tasks) == 0
 
+    def test_bulk_get_tasks_if_tasks_exists_with_max_count(self, mock_courier):
+        count_added_tasks = 10
+        count_got_tasks = 5
+        tasks_data = [f"task_data_{n}" for n in range(count_added_tasks)]
+        tasks_ids = [mock_courier.add_task_to_queue("test_queue", task_data)
+                     for task_data in tasks_data]
+
+        tasks = mock_courier.bulk_get_tasks("test_queue", max_count=count_got_tasks)
+        assert len(tasks) == count_got_tasks
+        for n in range(count_got_tasks):
+            task = tasks[n]
+            assert isinstance(task, Task)
+            assert task.id == tasks_ids[n]
+            assert task.data == tasks_data[n]
+
+
     def test_wait_for_task(self, mock_courier, sample_task_data):
         task_id = mock_courier.add_task_to_queue("test_queue", sample_task_data)
         task = mock_courier.wait_for_task("test_queue")
@@ -253,14 +269,14 @@ class TestCourier:
         task = mock_courier.wait_for_task(queue_name=queue_name)
         assert task.data == sample_task_data
 
-    def test_wait_for_task_with_timeout(self, mock_courier):
+    def test_wait_for_task_without_task_with_timeout(self, mock_courier):
         with pytest.raises(TimeoutError):
             mock_courier.wait_for_task(
                 queue_name="test_queue_name",
                 timeout_seconds=1)
 
     @assert_blocks_longer_than(1)
-    def test_wait_for_task_without_timeout(self, mock_courier):
+    def test_wait_for_task_without_task_without_timeout(self, mock_courier):
         mock_courier.wait_for_task(queue_name="test_queue_name")
 
     def test_wait_for_task_works_as_fifo(self, mock_courier):
@@ -273,6 +289,72 @@ class TestCourier:
 
         for n in range(count_tasks):
             task = mock_courier.wait_for_task("test_queue")
+            assert isinstance(task, Task)
+            assert task.id == tasks_ids[n]
+            assert task.data == tasks_data[n]
+
+    def test_bulk_wait_for_tasks_works_as_fifo(self, mock_courier):
+        count_tasks = 10
+        tasks_data = [f"task_data_{n}" for n in range(count_tasks)]
+        tasks_ids = []
+        for task_data in tasks_data:
+            task_id = mock_courier.add_task_to_queue("test_queue", task_data)
+            tasks_ids.append(task_id)
+
+        tasks = mock_courier.bulk_wait_for_tasks("test_queue", max_count=count_tasks)
+        assert len(tasks) == len(tasks_ids)
+        for n in range(count_tasks):
+            task = tasks[n]
+            assert isinstance(task, Task)
+            assert task.id == tasks_ids[n]
+            assert task.data == tasks_data[n]
+
+    def test_bulk_wait_for_tasks_with_delayed_tasks(self, mock_courier, sample_task_data):
+        def set_tasks(mock_courier_: Courier, queue_name_, task_data_, sleep_seconds_):
+            time.sleep(sleep_seconds_)
+            mock_courier_.add_task_to_queue(queue_name_, task_data=task_data_)
+            mock_courier_.add_task_to_queue(queue_name_, task_data=task_data_)
+
+        queue_name = "test_queue_name"
+        thread = threading.Thread(target=set_tasks, kwargs={
+            "mock_courier_": mock_courier,
+            "queue_name_": queue_name,
+            "task_data_": sample_task_data,
+            "sleep_seconds_": 1,
+        })
+        thread.start()
+
+        # If no tasks are available initially - waits for the first one and returns it
+        tasks = mock_courier.bulk_wait_for_tasks(queue_name=queue_name, max_count=2)
+        assert len(tasks) == 1
+        assert tasks[0].data == sample_task_data
+
+    def test_bulk_wait_for_tasks_without_tasks_with_timeout(self, mock_courier):
+        with pytest.raises(TimeoutError):
+            mock_courier.bulk_wait_for_tasks(
+                queue_name="test_queue_name",
+                timeout_seconds=1,
+                max_count=10)
+
+    @assert_blocks_longer_than(1)
+    def test_bulk_wait_for_tasks_without_tasks_without_timeout(self, mock_courier):
+        mock_courier.bulk_wait_for_tasks(queue_name="test_queue_name", max_count=10)
+
+    def test_bulk_wait_for_tasks_if_no_tasks_exists_with_timeout(self, mock_courier):
+        with pytest.raises(TimeoutError):
+            mock_courier.bulk_wait_for_tasks("test_queue", max_count=10, timeout_seconds=1)
+
+    def test_bulk_wait_for_tasks_if_tasks_exists_with_max_count(self, mock_courier):
+        count_added_tasks = 10
+        count_got_tasks = 5
+        tasks_data = [f"task_data_{n}" for n in range(count_added_tasks)]
+        tasks_ids = [mock_courier.add_task_to_queue("test_queue", task_data)
+                     for task_data in tasks_data]
+
+        tasks = mock_courier.bulk_wait_for_tasks("test_queue", max_count=count_got_tasks)
+        assert len(tasks) == count_got_tasks
+        for n in range(count_got_tasks):
+            task = tasks[n]
             assert isinstance(task, Task)
             assert task.id == tasks_ids[n]
             assert task.data == tasks_data[n]
