@@ -121,7 +121,7 @@ class WorkerSideCourier(QueueNameMixin):
           multiple tasks to the client side.
     """
 
-    result_timeout_seconds: int = 600  # Set None to keep task_result permanently.
+    result_timeout_seconds: int | None = 600  # Set None to keep task_result permanently.
 
     def __init__(self, task_serializer: TaskSerializer,
                  task_result_serializer: TaskResultSerializer,
