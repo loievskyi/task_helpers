@@ -1,26 +1,27 @@
 import threading
 import time
 import uuid
+from typing import Type
 
 import pytest
 
 from task_helpers.backends.sync import Backend
-from task_helpers.couriers import Courier
+from task_helpers.couriers import Courier, ClientSideCourier, WorkerSideCourier
 from task_helpers.exceptions import TaskResultDoesNotExist, TaskDoesNotExist
 from task_helpers.serializers import TaskSerializer, TaskResultSerializer
 from task_helpers.tasks import Task
-from tests.conftest import mock_task_serializer, mock_task_result_serializer, mock_backend, assert_blocks_longer_than
+from tests.conftest import mock_task_serializer, mock_task_result_serializer, backend, assert_blocks_longer_than
 
 
 class TestCourier:
     @pytest.fixture
-    def mock_courier(self, mock_backend: Backend,
+    def mock_courier(self, backend: Backend,
                      mock_task_serializer: TaskSerializer,
                      mock_task_result_serializer: TaskResultSerializer):
         return Courier(
             task_serializer=mock_task_serializer,
             task_result_serializer=mock_task_result_serializer,
-            backend=mock_backend,
+            backend=backend,
             prefix_queue=f"test_prefix_{uuid.uuid4().hex[:8]}"
         )
 
@@ -358,3 +359,200 @@ class TestCourier:
             assert isinstance(task, Task)
             assert task.id == tasks_ids[n]
             assert task.data == tasks_data[n]
+
+    def test_return_task_result(self, mock_courier, sample_task_data):
+        queue_name = "test_queue"
+        task_id = uuid.uuid4()
+        excepted_task_result = sample_task_data
+
+        mock_courier.return_task_result(
+            queue_name=queue_name,
+            task_id=task_id,
+            task_result=excepted_task_result)
+
+        task_result = mock_courier.get_task_result(queue_name, task_id)
+        assert task_result == excepted_task_result
+
+    def test_return_task_result_without_timeout(self, mock_courier, sample_task_data):
+        mock_courier.result_timeout_seconds = None
+        queue_name = "test_queue"
+        task_id = uuid.uuid4()
+        excepted_task_result = sample_task_data
+
+        mock_courier.return_task_result(
+            queue_name=queue_name,
+            task_id=task_id,
+            task_result=excepted_task_result)
+
+        task_result = mock_courier.get_task_result(queue_name, task_id)
+        assert task_result == excepted_task_result
+
+    def test_return_task_result_result_expires_after_timeout(self, mock_courier, sample_task_data):
+        mock_courier.result_timeout_seconds = 1
+        queue_name = "test_queue"
+        task_id = uuid.uuid4()
+        excepted_task_result = sample_task_data
+
+        mock_courier.return_task_result(
+            queue_name=queue_name,
+            task_id=task_id,
+            task_result=excepted_task_result)
+
+        time.sleep(1.1)
+        with pytest.raises(TaskResultDoesNotExist):
+            mock_courier.get_task_result(queue_name, task_id)
+
+    def test_return_task_result_result_persists_within_timeout(self, mock_courier, sample_task_data):
+        mock_courier.result_timeout_seconds = 2
+        queue_name = "test_queue"
+        task_id = uuid.uuid4()
+        excepted_task_result = sample_task_data
+
+        mock_courier.return_task_result(
+            queue_name=queue_name,
+            task_id=task_id,
+            task_result=excepted_task_result)
+
+        time.sleep(1)
+        task_result = mock_courier.get_task_result(queue_name, task_id)
+        assert task_result == excepted_task_result
+
+    def test_bulk_return_task_results(self, mock_courier):
+        queue_name = "test_queue"
+        count_tasks = 10
+        tasks = [Task(data=None, result=f"test_task_data_{n}") for n in range(count_tasks)]
+
+        mock_courier.bulk_return_tasks_results(
+            queue_name=queue_name,
+            tasks=tasks)
+
+        for task in tasks:
+            task_result = mock_courier.get_task_result(queue_name, task.id)
+            assert task_result == task.result
+
+    def test_bulk_return_task_results_without_timeout(self, mock_courier):
+        mock_courier.result_timeout_seconds = None
+        queue_name = "test_queue"
+        count_tasks = 10
+        tasks = [Task(data=None, result=f"test_task_data_{n}") for n in range(count_tasks)]
+
+        mock_courier.bulk_return_tasks_results(
+            queue_name=queue_name,
+            tasks=tasks)
+
+        for task in tasks:
+            task_result = mock_courier.get_task_result(queue_name, task.id)
+            assert task_result == task.result
+
+    def test_bulk_return_task_results_results_expires_after_timeout(self, mock_courier):
+        mock_courier.result_timeout_seconds = 1
+        queue_name = "test_queue"
+        count_tasks = 10
+        tasks = [Task(data=None, result=f"test_task_data_{n}") for n in range(count_tasks)]
+
+        mock_courier.bulk_return_tasks_results(
+            queue_name=queue_name,
+            tasks=tasks)
+        time.sleep(1.1)
+
+        for task in tasks:
+            with pytest.raises(TaskResultDoesNotExist):
+                mock_courier.get_task_result(queue_name, task.id)
+
+
+    def test_bulk_return_task_results_results_persists_within_timeout(self, mock_courier):
+        mock_courier.result_timeout_seconds = 2
+        queue_name = "test_queue"
+        count_tasks = 10
+        tasks = [Task(data=None, result=f"test_task_data_{n}") for n in range(count_tasks)]
+
+        mock_courier.bulk_return_tasks_results(
+            queue_name=queue_name,
+            tasks=tasks)
+        time.sleep(1.1)
+
+        for task in tasks:
+            task_result = mock_courier.get_task_result(queue_name, task.id)
+            assert task_result == task.result
+
+
+def test_client_side_courier_init(backend, mock_task_serializer, mock_task_result_serializer):
+    """Test that kwargs are properly set as attributes"""
+    custom_prefix = f"custom_prefix_{uuid.uuid4().hex[:8]}"
+    custom_timeout = 300
+    custom_param = "test_value"
+
+    courier = Courier(
+        task_serializer=mock_task_serializer,
+        task_result_serializer=mock_task_result_serializer,
+        backend=backend,
+        prefix_queue=custom_prefix,
+        result_timeout_seconds=custom_timeout,
+        custom_parameter=custom_param
+    )
+
+    # Verify that kwargs were set as attributes
+    assert courier.prefix_queue == custom_prefix
+    assert courier.result_timeout_seconds == custom_timeout
+    assert hasattr(courier, "custom_parameter")
+    assert getattr(courier, "custom_parameter") == custom_param
+
+
+class TestCouriersInit:
+    @pytest.fixture(params=[
+        pytest.param(ClientSideCourier, id="client_side"),
+        pytest.param(WorkerSideCourier, id="worker_side"),
+        pytest.param(Courier, id="all_side"),
+    ])
+    def courier_class(self, request):
+        return request.param
+
+
+    def test_client_side_courier_init_with_kwargs(
+            self, courier_class: Type[ClientSideCourier | WorkerSideCourier | Courier],
+            backend: Backend,
+            mock_task_serializer: TaskSerializer,
+            mock_task_result_serializer: TaskResultSerializer):
+        """Test that kwargs are properly set as attributes"""
+        custom_prefix = f"custom_prefix_{uuid.uuid4().hex[:8]}"
+        custom_timeout = 300
+        custom_param = "test_value"
+
+        courier = courier_class(
+            task_serializer=mock_task_serializer,
+            task_result_serializer=mock_task_result_serializer,
+            backend=backend,
+            prefix_queue=custom_prefix,
+            result_timeout_seconds=custom_timeout,
+            custom_parameter=custom_param
+        )
+
+        # Verify that kwargs were set as attributes
+        assert courier.task_serializer == mock_task_serializer
+        assert courier.task_result_serializer == mock_task_result_serializer
+        assert courier.backend == backend
+        assert courier.prefix_queue == custom_prefix
+        assert courier.result_timeout_seconds == custom_timeout
+        assert hasattr(courier, "custom_parameter")
+        assert getattr(courier, "custom_parameter") == custom_param
+
+    def test_client_side_courier_init_without_kwargs(
+            self, courier_class: Type[ClientSideCourier | WorkerSideCourier | Courier],
+            backend: Backend,
+            mock_task_serializer: TaskSerializer,
+            mock_task_result_serializer: TaskResultSerializer):
+        """Test courier initialization without additional kwargs"""
+        courier = courier_class(
+            task_serializer=mock_task_serializer,
+            task_result_serializer=mock_task_result_serializer,
+            backend=backend
+        )
+
+        # Verify basic attributes are set
+        assert courier.task_serializer == mock_task_serializer
+        assert courier.task_result_serializer == mock_task_result_serializer
+        assert courier.backend == backend
+        # Default values should be preserved
+        assert courier.prefix_queue == ""  # default value
+        if isinstance(courier, WorkerSideCourier):
+            assert courier.result_timeout_seconds == 600  # default value
