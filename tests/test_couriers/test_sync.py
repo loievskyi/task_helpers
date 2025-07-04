@@ -476,28 +476,6 @@ class TestCourier:
             assert task_result == task.result
 
 
-def test_client_side_courier_init(backend, mock_task_serializer, mock_task_result_serializer):
-    """Test that kwargs are properly set as attributes"""
-    custom_prefix = f"custom_prefix_{uuid.uuid4().hex[:8]}"
-    custom_timeout = 300
-    custom_param = "test_value"
-
-    courier = Courier(
-        task_serializer=mock_task_serializer,
-        task_result_serializer=mock_task_result_serializer,
-        backend=backend,
-        prefix_queue=custom_prefix,
-        result_timeout_seconds=custom_timeout,
-        custom_parameter=custom_param
-    )
-
-    # Verify that kwargs were set as attributes
-    assert courier.prefix_queue == custom_prefix
-    assert courier.result_timeout_seconds == custom_timeout
-    assert hasattr(courier, "custom_parameter")
-    assert getattr(courier, "custom_parameter") == custom_param
-
-
 class TestCouriersInit:
     @pytest.fixture(params=[
         pytest.param(ClientSideCourier, id="client_side"),
