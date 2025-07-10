@@ -1,3 +1,4 @@
+import time
 from abc import ABC, abstractmethod
 
 from task_helpers.couriers import WorkerSideCourier
@@ -8,7 +9,7 @@ class Worker(ABC):
     queue_name: str
     count_iterations: int = 10_000
     max_tasks_per_iteration: int = 10
-    iteration_delay_seconds: float | int = 0.001
+    iteration_delay_seconds: float | int = 0
     needs_result_returning: bool = True
 
     def __init__(self, courier: WorkerSideCourier):
@@ -22,6 +23,7 @@ class Worker(ABC):
                 self._courier.bulk_return_tasks_results(
                     queue_name=self.queue_name,
                     tasks=tasks)
+            time.sleep(self.iteration_delay_seconds)
 
     def _wait_for_tasks(self) -> list[Task]:
         tasks = self._courier.bulk_wait_for_tasks(
