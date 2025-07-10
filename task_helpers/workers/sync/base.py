@@ -2,6 +2,7 @@ import time
 from abc import ABC, abstractmethod
 
 from task_helpers.couriers import WorkerSideCourier
+from task_helpers.exceptions import PerformTaskError
 from task_helpers.tasks import Task
 
 
@@ -18,7 +19,7 @@ class Worker(ABC):
     def perform(self, count_iterations: int = count_iterations) -> None:
         for _ in range(count_iterations):
             tasks = self._wait_for_tasks()
-            self._perform_tasks(tasks)
+            self._safe_perform_tasks(tasks)
             if self.needs_result_returning:
                 self._courier.bulk_return_tasks_results(
                     queue_name=self.queue_name,
@@ -31,9 +32,22 @@ class Worker(ABC):
             max_count=self.max_tasks_per_iteration)
         return tasks
 
+    def _safe_perform_tasks(self, tasks: list[Task]) -> None:
+        try:
+            self._perform_tasks(tasks)
+        except Exception as ex:
+            for task in tasks:
+                task.result = PerformTaskError(task=task, exception=ex)
+
     def _perform_tasks(self, tasks: list[Task]) -> None:
         for task in tasks:
+            self._safe_perform_single_task(task)
+
+    def _safe_perform_single_task(self, task: Task) -> None:
+        try:
             self._perform_single_task(task)
+        except Exception as ex:
+            task.result = PerformTaskError(task=task, exception=ex)
 
     @abstractmethod
     def _perform_single_task(self, task: Task) -> None:
