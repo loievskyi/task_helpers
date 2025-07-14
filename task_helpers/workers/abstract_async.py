@@ -1,6 +1,6 @@
-from typing import List, Tuple, Awaitable
+from typing import List, Tuple
 
-from task_helpers.couriers.abstract_async import AbstractAsyncWorkerTaskCourier
+from task_helpers.couriers import AsyncWorkerSideCourier
 
 
 class AbstractAsyncWorker:
@@ -9,7 +9,7 @@ class AbstractAsyncWorker:
     """
 
     def __init__(
-            self, async_task_courier: AbstractAsyncWorkerTaskCourier,
+            self, async_task_courier: AsyncWorkerSideCourier,
             *args, **kwargs):
         """
         Initializations. async_task_courier
@@ -17,14 +17,14 @@ class AbstractAsyncWorker:
         """
         self.async_task_courier = async_task_courier
 
-    async def wait_for_tasks(self) -> Awaitable[List[Tuple]]:
+    async def wait_for_tasks(self) -> List[Tuple]:
         """
         Abstract method. Should return a list of tasks:
         [(task_id, task_data), (task_id, task_data), ...]
         """
         raise NotImplementedError
 
-    async def perform_tasks(self, tasks: List[Tuple]) -> Awaitable[List[Tuple]]:
+    async def perform_tasks(self, tasks: List[Tuple]) -> List[Tuple]:
         """
         Abstract method for processing tasks. Should return a list of tasks:
         [(task_id, task_result), (task_id, task_result), ...]
@@ -33,7 +33,7 @@ class AbstractAsyncWorker:
 
     async def async_init(self):
         """
-        Abstract aync init method for initialization async objects
+        Abstract async init method for initialization async objects
         (aiohttp.ClientSession, for example).
         Calls at the beginning of the "perform" method.
         """
@@ -47,14 +47,14 @@ class AbstractAsyncWorker:
         """
         raise NotImplementedError
 
-    async def return_tasks_results(self, tasks: List[Tuple]) -> Awaitable[None]:
+    async def return_tasks_results(self, tasks: List[Tuple]) -> None:
         """
         Abstract method for returning task results. Tasks like:
         [(task_id, task_data), (task_id, task_data), ...]
         """
         raise NotImplementedError
 
-    async def perform(self, total_iterations: int) -> Awaitable[None]:
+    async def perform(self, total_iterations: int) -> None:
         """
         Abstract method for starting a worker.
         """

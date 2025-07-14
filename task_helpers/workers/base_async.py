@@ -2,8 +2,9 @@ import logging
 import asyncio
 import multiprocessing
 
+from task_helpers.tasks import Task
 from task_helpers.workers.abstract_async import AbstractAsyncWorker
-from task_helpers.couriers.abstract_async import AbstractAsyncWorkerTaskCourier
+from task_helpers.couriers import AsyncWorkerSideCourier
 from task_helpers import exceptions
 
 
@@ -12,24 +13,24 @@ class BaseAsyncWorker(AbstractAsyncWorker):
     Base class for async workers.
     Initialization requires an instance of async_task_courier.
     The other kwargs will override the class fields for the current instance
-    of the class. They can also be overriden in an inherited class.
+    of the class. They can also be overridden in an inherited class.
 
     Class fields:
     - async_task_courier - an instance of the AbstractAsyncWorkerTaskCourier.
       Specified when the class is initialized.
     - queue_name - The name of the queue from which tasks will be performed.
     - after_iteration_sleep_time - Downtime in seconds after each task is
-      completed (e.g. 0.1). Default is 1 millisecond.
+      completed (e.g., 0.1). The default is 1 millisecond.
     - max_tasks_per_iteration - How many tasks can be processed in 1 iteration
       (in the perform_many_tasks method). Influences how many maximum tasks
       will be popped from the queue.
-    - needs_result_returning - True if needs to return the result of the
+    - needs_result_returning - True if it needs to return the result of the
       task performing, or False otherwise.
     - max_simultaneous_tasks - How many tasks can a worker perform
       simultaneously.
     """
 
-    task_courier: AbstractAsyncWorkerTaskCourier
+    async_task_courier: AsyncWorkerSideCourier
     queue_name = None
     after_iteration_sleep_time = 0.001
     max_tasks_per_iteration = 1
@@ -41,12 +42,11 @@ class BaseAsyncWorker(AbstractAsyncWorker):
     stop_signal: multiprocessing.Value
     check_stop_signal_timeout = 60
 
-    def __init__(self, async_task_courier: AbstractAsyncWorkerTaskCourier,
-                 **kwargs):
+    def __init__(self, async_task_courier: AsyncWorkerSideCourier, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        assert isinstance(async_task_courier, AbstractAsyncWorkerTaskCourier),\
+        assert isinstance(async_task_courier, AsyncWorkerSideCourier),\
             "async_task_courier is not instance of " \
             "AbstractAsyncWorkerTaskCourier"
         self.async_task_courier = async_task_courier
@@ -66,17 +66,18 @@ class BaseAsyncWorker(AbstractAsyncWorker):
 
     async def wait_for_tasks(self):
         """
-        Waits for tasks in the queue, pops and returns them. The count of
+        Waits for tasks in the queue, pops, and returns them. The count of
         tasks depends on the self.max_tasks_per_iteration argument:
         Count of tasks = min(len_queue, self.max_tasks_per_iteration).
         """
         while self.is_not_stopped:
             try:
-                return await self.async_task_courier.bulk_wait_for_tasks(
+                tasks = await self.async_task_courier.bulk_wait_for_tasks(
                     queue_name=self.queue_name,
                     max_count=self.max_tasks_per_iteration,
-                    timeout=self.check_stop_signal_timeout,
+                    timeout_seconds=self.check_stop_signal_timeout,
                 )
+                return [(task.id, task.data) for task in tasks]
             except TimeoutError:
                 pass
         return []
@@ -101,22 +102,24 @@ class BaseAsyncWorker(AbstractAsyncWorker):
     async def perform_single_task(self, task):
         """
         Abstract method for processing one task.
-        Task is tuple: (task_id, task_data). Should return a task resut.
+        Task is tuple: (task_id, task_data). Should return a task reset.
         """
         raise NotImplementedError
 
     async def return_tasks_results(self, tasks):
         """
-        Method method for sending task results to the clients.
+        Method for sending task results to the clients.
         """
+        task_results = [Task(id=task_tuple[0], data=task_tuple[1])
+                        for task_tuple in tasks]
         await self.async_task_courier.bulk_return_tasks_results(
             queue_name=self.queue_name,
-            tasks=tasks,
+            tasks=task_results,
         )
 
     async def async_init(self):
         """
-        Aync init method for initialization async objects
+        Async init method for initialization async objects
         (aiohttp.ClientSession, for example).
         Calls at the beginning of the "perform" method.
         """
@@ -135,7 +138,7 @@ class BaseAsyncWorker(AbstractAsyncWorker):
             output_tasks = await self.perform_tasks(tasks=input_tasks)
         except Exception as ex:
             logging.exception(
-                f"An error has occured on Worker._async_perform_inner: {ex}")
+                f"An error has occurred on Worker._async_perform_inner: {ex}")
             output_tasks = list()
             for task in input_tasks:
                 task_id = task[0]
@@ -160,7 +163,7 @@ class BaseAsyncWorker(AbstractAsyncWorker):
         """
         The main method that starts the task worker.
         Takes a task from the queue, calls the "perform_tasks" method,
-        and returns the result if "needs_result_returning" field is True.
+        and returns the result if the "needs_result_returning" field is True.
 
         - total_iterations - how many iterations should the worker perform.
         """

@@ -8,7 +8,7 @@ from .base_async import BaseAsyncWorker
 
 class ClassicAsyncWorker(BaseAsyncWorker):
     """
-    Сlassic async worker, where the task is a tuple: (task_id, task_data).
+    Classic async worker, where the task is a tuple: (task_id, task_data).
     task_data is a dictionary with keys "function", "args" and "kwargs".
     Arguments "args" and "kwargs" are optional.
 
@@ -17,11 +17,11 @@ class ClassicAsyncWorker(BaseAsyncWorker):
       Specified when the class is initialized.
     - queue_name - The name of the queue from which tasks are read.
     - after_iteration_sleep_time - Downtime in seconds after each task is
-      completed (e.g. 0.1). Default is 1 millisecond.
+      completed (e.g., 0.1). The default is 1 millisecond.
     - max_tasks_per_iteration - How many tasks can be processed in 1 iteration
       (in the perform_many_tasks method). Influences how many maximum tasks
       will be popped from the queue.
-    - needs_result_returning - True if needs to return the result of the
+    - needs_result_returning - True if it needs to return the result of the
       task performing, or False otherwise.
     - max_simultaneous_tasks - How many tasks can a worker perform
       simultaneously.
@@ -32,7 +32,7 @@ class ClassicAsyncWorker(BaseAsyncWorker):
     def __init__(self, *args, **kwargs):
         self.thread_executor = ThreadPoolExecutor(
             max_workers=self.max_simultaneous_tasks)
-        return super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     async def perform_single_task(self, task):
         """
@@ -59,4 +59,4 @@ class ClassicAsyncWorker(BaseAsyncWorker):
                 function, *function_args, **function_kwargs)
             loop = asyncio.get_event_loop()
             return await loop.run_in_executor(
-                self.thread_executor, function_with_data)
+                self.thread_executor, function_with_data, ())

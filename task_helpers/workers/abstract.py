@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-from task_helpers.couriers.abstract import AbstractWorkerTaskCourier
+from task_helpers.couriers import WorkerSideCourier
 
 
 class AbstractWorker:
@@ -9,7 +9,7 @@ class AbstractWorker:
     """
 
     def __init__(
-            self, task_courier: AbstractWorkerTaskCourier, *args, **kwargs):
+            self, task_courier: WorkerSideCourier, *args, **kwargs):
         """
         Initializations. task_courier (AbstractWorkerTaskCourier instance)
         is required

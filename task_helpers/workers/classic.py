@@ -3,7 +3,7 @@ from .base import BaseWorker
 
 class ClassicWorker(BaseWorker):
     """
-    Сlassic worker, where the task is a tuple: (task_id, task_data).
+    Classic worker, where the task is a tuple: (task_id, task_data).
     task_data is a dictionary with keys "function", "args" and "kwargs".
     Arguments "args" and "kwargs" are optional.
 
@@ -12,11 +12,11 @@ class ClassicWorker(BaseWorker):
       Specified when the class is initialized.
     - queue_name - The name of the queue from which tasks are read.
     - after_iteration_sleep_time - Downtime in seconds after each task is
-      completed (e.g. 0.1). Default is 1 millisecond.
+      completed (e.g., 0.1). The default is 1 millisecond.
     - max_tasks_per_iteration - How many tasks can be processed in 1 iteration
       (in the perform_many_tasks method). Influences how many maximum tasks
       will be popped from the queue.
-    - needs_result_returning - True if needs to return the result of the
+    - needs_result_returning - True if it needs to return the result of the
       task performing, or False otherwise.
     """
 

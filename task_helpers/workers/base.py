@@ -2,8 +2,9 @@ import time
 import logging
 import multiprocessing
 
+from task_helpers.tasks import Task
 from task_helpers.workers.abstract import AbstractWorker
-from task_helpers.couriers.abstract import AbstractWorkerTaskCourier
+from task_helpers.couriers import WorkerSideCourier
 from task_helpers import exceptions
 
 
@@ -12,22 +13,22 @@ class BaseWorker(AbstractWorker):
     Base class for workers.
     Initialization requires an instance of task_courier.
     The other kwargs will override the class fields for the current instance
-    of the class. They can also be overriden in an inherited class.
+    of the class. They can also be overridden in an inherited class.
 
     Class fields:
     - task_courier - an instance of the task_courier.
       Specified when the class is initialized.
     - queue_name - The name of the queue from which tasks will be performed.
     - after_iteration_sleep_time - Downtime in seconds after each task is
-      completed (e.g. 0.1). Default is 1 millisecond.
+      completed (e.g., 0.1). The default is 1 millisecond.
     - max_tasks_per_iteration - How many tasks can be processed in 1 iteration
       (in the perform_many_tasks method). Influences how many maximum tasks
       will be popped from the queue.
-    - needs_result_returning - True if needs to return the result of the
+    - needs_result_returning - True if it needs to return the result of the
       task performing, or False otherwise.
     """
 
-    task_courier: AbstractWorkerTaskCourier = None
+    task_courier: WorkerSideCourier = None
     queue_name = None
     after_iteration_sleep_time = 0.001
     max_tasks_per_iteration = 1
@@ -36,8 +37,8 @@ class BaseWorker(AbstractWorker):
     stop_signal: multiprocessing.Value
     check_stop_signal_timeout = 60
 
-    def __init__(self, task_courier: AbstractWorkerTaskCourier, **kwargs):
-        assert isinstance(task_courier, AbstractWorkerTaskCourier),\
+    def __init__(self, task_courier: WorkerSideCourier, **kwargs):
+        assert isinstance(task_courier, WorkerSideCourier),\
             "async_task_courier is not instance of AbstractWorkerTaskCourier"
         self.task_courier = task_courier
         for key, value in kwargs.items():
@@ -57,17 +58,18 @@ class BaseWorker(AbstractWorker):
 
     def wait_for_tasks(self):
         """
-        Waits for tasks in the queue, pops and returns them. The count of
+        Waits for tasks in the queue, pops, and returns them. The count of
         tasks depends on the self.max_tasks_per_iteration argument:
         Count of tasks = min(len_queue, self.max_tasks_per_iteration).
         """
         while self.is_not_stopped:
             try:
-                return self.task_courier.bulk_wait_for_tasks(
+                tasks = self.task_courier.bulk_wait_for_tasks(
                     queue_name=self.queue_name,
                     max_count=self.max_tasks_per_iteration,
-                    timeout=self.check_stop_signal_timeout,
+                    timeout_seconds=self.check_stop_signal_timeout,
                 )
+                return [(task.id, task.data) for task in tasks]
             except TimeoutError:
                 pass
         return []
@@ -92,17 +94,19 @@ class BaseWorker(AbstractWorker):
     def perform_single_task(self, task):
         """
         Abstract method for processing one task.
-        Task is tuple: (task_id, task_data). Should return a task resut.
+        Task is tuple: (task_id, task_data). Should return a task result.
         """
         raise NotImplementedError
 
     def return_tasks_results(self, tasks):
         """
-        Method method for sending task results to the clients.
+        Method for sending task results to the clients.
         """
+        task_results = [Task(id=task_tuple[0], data=task_tuple[1])
+                        for task_tuple in tasks]
         self.task_courier.bulk_return_tasks_results(
             queue_name=self.queue_name,
-            tasks=tasks,
+            tasks=task_results,
         )
 
     def destroy(self):
@@ -117,7 +121,7 @@ class BaseWorker(AbstractWorker):
         """
         The main method that starts the task worker.
         Takes tasks from the queue, calls the "perform_tasks" method,
-        and returns the result if "needs_result_returning" field is True.
+        and returns the result if the "needs_result_returning" field is True.
 
         - total_iterations - how many iterations should the worker perform.
         """
@@ -129,7 +133,7 @@ class BaseWorker(AbstractWorker):
                 output_tasks = self.perform_tasks(tasks=input_tasks)
             except Exception as ex:
                 logging.exception(
-                    f"An error has occured on Worker.perform: {ex}")
+                    f"An error has occurred on Worker.perform: {ex}")
                 output_tasks = list()
                 for task in input_tasks:
                     task_id = task[0]
