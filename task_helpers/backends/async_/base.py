@@ -6,10 +6,6 @@ from task_helpers.exceptions import DoesNotExistError
 
 class AsyncWriteOnlyBackend(ABC):
     @abstractmethod
-    def __init__(self, *args, **kwargs):
-        ...
-
-    @abstractmethod
     async def set(self, key: str, value: bytes) -> None:
         """Set value by key."""
 

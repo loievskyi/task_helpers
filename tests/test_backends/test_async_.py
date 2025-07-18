@@ -7,7 +7,7 @@ from task_helpers.backends.async_ import AsyncBackend
 from task_helpers.exceptions import DoesNotExistError
 
 
-class TestAsyncRedisBackend:
+class TestAsyncBackend:
     @pytest.mark.asyncio
     async def test_get_set(self, async_backend: AsyncBackend):
         """Test basic get and set operations"""

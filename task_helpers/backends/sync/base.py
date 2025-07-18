@@ -7,10 +7,6 @@ from task_helpers.exceptions import DoesNotExistError
 
 class WriteOnlyBackend(ABC):
     @abstractmethod
-    def __init__(self, *args, **kwargs):
-        ...
-
-    @abstractmethod
     def set(self, key: str, value: bytes) -> None:
         """Set value by key."""
 
