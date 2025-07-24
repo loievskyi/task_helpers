@@ -1,6 +1,6 @@
 from .bytes import BytesConverter
 from .base import Converter
-from .task_tuple import TaskTupleConverter
+from .task import TaskTupleConverter
 
 __all__ = [
     "Converter",

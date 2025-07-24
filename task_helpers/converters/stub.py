@@ -5,7 +5,7 @@ from .base import Converter
 Type = TypeVar("Type")
 
 
-class ConverterSlug(Converter[Type, Type]):
+class ConverterStub(Converter[Type, Type]):
     def encode(self, source: Type) -> Type:
         return source
 
