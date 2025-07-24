@@ -1,7 +1,7 @@
 import uuid
 from typing import Any
 
-from task_helpers.serializers import TaskSerializer, TaskResultSerializer
+from task_helpers.serializers import TaskSerializer, CustomTypeSerializer
 from task_helpers.tasks import Task
 from .mixins import QueueNameMixin
 from .. import exceptions
@@ -29,16 +29,12 @@ class ClientSideCourier(QueueNameMixin):
         - check_for_done - checks if the task has completed.
     """
 
-    task_serializer: TaskSerializer
-    task_result_serializer: TaskResultSerializer
-    backend: Backend
-
     def __init__(self, task_serializer: TaskSerializer,
-                 task_result_serializer: TaskResultSerializer,
+                 task_result_serializer: CustomTypeSerializer,
                  backend: Backend, **kwargs) -> None:
-        self.task_serializer = task_serializer
-        self.task_result_serializer = task_result_serializer
-        self.backend = backend
+        self._task_serializer = task_serializer
+        self._task_result_serializer = task_result_serializer
+        self._backend = backend
 
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -46,8 +42,8 @@ class ClientSideCourier(QueueNameMixin):
     def add_task_to_queue(self, queue_name: str, task_data: Any) -> uuid.UUID:
         queue_name = self._build_queue_name(queue_name, suffix="pending")
         task = self._generate_task(task_data)
-        serialized_task = self.task_serializer.serialize(task)
-        self.backend.add_to_queue(queue_name, serialized_task)
+        serialized_task = self._task_serializer.serialize(task)
+        self._backend.add_to_queue(queue_name, serialized_task)
         return task.id
 
     def bulk_add_tasks_to_queue(self, queue_name: str, tasks_data: list) -> list[uuid.UUID]:
@@ -56,26 +52,26 @@ class ClientSideCourier(QueueNameMixin):
 
         queue_name = self._build_queue_name(queue_name, suffix="pending")
         tasks = [self._generate_task(task_data) for task_data in tasks_data]
-        serialized_tasks = [self.task_serializer.serialize(task) for task in tasks]
-        self.backend.bulk_add_to_queue(queue_name, serialized_tasks)
+        serialized_tasks = [self._task_serializer.serialize(task) for task in tasks]
+        self._backend.bulk_add_to_queue(queue_name, serialized_tasks)
         return [task.id for task in tasks]
 
     def get_task_result(self, queue_name: str, task_id: uuid.UUID, delete_data: bool = True) -> Any:
         queue_name = self._build_queue_name(queue_name, f"results:{str(task_id)}")
-        raw_data = self.backend.pop_or_requeue(queue_name, delete_data=delete_data,
-                                               error_class=exceptions.TaskResultDoesNotExist)
-        return self.task_result_serializer.deserialize(raw_data)
+        raw_data = self._backend.pop_or_requeue(queue_name, delete_data=delete_data,
+                                                error_class=exceptions.TaskResultDoesNotExist)
+        return self._task_result_serializer.deserialize(raw_data)
 
     def wait_for_task_result(self, queue_name: str, task_id: uuid.UUID,
                              delete_data: bool = True, timeout_seconds: int | None = None) -> Any:
         queue_name = self._build_queue_name(queue_name, f"results:{str(task_id)}")
-        raw_data = self.backend.pop_or_requeue_blocking(queue_name, delete_data=delete_data,
-                                                        timeout_seconds=timeout_seconds)
-        return self.task_result_serializer.deserialize(raw_data)
+        raw_data = self._backend.pop_or_requeue_blocking(queue_name, delete_data=delete_data,
+                                                         timeout_seconds=timeout_seconds)
+        return self._task_result_serializer.deserialize(raw_data)
 
     def check_for_done(self, queue_name: str, task_id: uuid.UUID) -> bool:
         queue_name = self._build_queue_name(queue_name, f"results:{str(task_id)}")
-        return self.backend.exists(queue_name)
+        return self._backend.exists(queue_name)
 
     def _generate_task(self, task_data: Any) -> Task:
         return Task(
@@ -108,29 +104,29 @@ class WorkerSideCourier(QueueNameMixin):
     result_timeout_seconds: int | None = 600  # Set None to keep task_result permanently.
 
     def __init__(self, task_serializer: TaskSerializer,
-                 task_result_serializer: TaskResultSerializer,
+                 task_result_serializer: CustomTypeSerializer,
                  backend: Backend, **kwargs) -> None:
-        self.task_serializer = task_serializer
-        self.task_result_serializer = task_result_serializer
-        self.backend = backend
+        self._task_serializer = task_serializer
+        self._task_result_serializer = task_result_serializer
+        self._backend = backend
 
         for key, value in kwargs.items():
             setattr(self, key, value)
 
     def get_task(self, queue_name: str) -> Task:
         queue_name = self._build_queue_name(queue_name, "pending")
-        serialized = self.backend.pop_from_queue(queue_name, error_class=exceptions.TaskDoesNotExist)
-        return self.task_serializer.deserialize(serialized)
+        serialized = self._backend.pop_from_queue(queue_name, error_class=exceptions.TaskDoesNotExist)
+        return self._task_serializer.deserialize(serialized)
 
     def bulk_get_tasks(self, queue_name: str, max_count: int) -> list[Task]:
         queue_name = self._build_queue_name(queue_name, "pending")
-        serialized_tasks = self.backend.bulk_pop_from_queue(queue_name, max_count)
-        return [self.task_serializer.deserialize(task) for task in serialized_tasks]
+        serialized_tasks = self._backend.bulk_pop_from_queue(queue_name, max_count)
+        return [self._task_serializer.deserialize(task) for task in serialized_tasks]
 
     def wait_for_task(self, queue_name: str, timeout_seconds: int | None = None) -> Task:
         queue_name = self._build_queue_name(queue_name, "pending")
-        serialized = self.backend.pop_from_queue_blocking(queue_name, timeout_seconds=timeout_seconds)
-        return self.task_serializer.deserialize(serialized)
+        serialized = self._backend.pop_from_queue_blocking(queue_name, timeout_seconds=timeout_seconds)
+        return self._task_serializer.deserialize(serialized)
 
     def bulk_wait_for_tasks(self, queue_name: str, max_count: int,
                             timeout_seconds: int | None = None) -> list[Task]:
@@ -141,8 +137,8 @@ class WorkerSideCourier(QueueNameMixin):
 
     def return_task_result(self, queue_name: str, task_id: uuid.UUID, task_result: Any) -> None:
         queue_name = self._build_queue_name(queue_name, suffix=f"results:{str(task_id)}")
-        serialized = self.task_result_serializer.serialize(task_result)
-        with self.backend.pipeline() as pipeline:
+        serialized = self._task_result_serializer.serialize(task_result)
+        with self._backend.pipeline() as pipeline:
             pipeline.add_to_queue(queue_name, serialized)
             if self.result_timeout_seconds:
                 pipeline.expire(queue_name, self.result_timeout_seconds)
@@ -150,11 +146,11 @@ class WorkerSideCourier(QueueNameMixin):
     def bulk_return_tasks_results(self, queue_name: str, tasks: list[Task]) -> None:
         keys_and_data = [
             (self._build_queue_name(queue_name, f"results:{str(task.id)}"),
-             self.task_result_serializer.serialize(task.result))
+             self._task_result_serializer.serialize(task.result))
             for task in tasks
         ]
 
-        with self.backend.pipeline() as pipeline:
+        with self._backend.pipeline() as pipeline:
             for key, data in keys_and_data:
                 pipeline.add_to_queue(key, data)
                 if self.result_timeout_seconds:
