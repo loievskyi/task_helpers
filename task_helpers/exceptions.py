@@ -21,9 +21,12 @@ class TaskResultDoesNotExist(DoesNotExistError):
 
 class PerformTaskError(TaskHelperError):
     def __init__(self, exception: Exception | None = None,
+                 exception_data: dict | None = None,
                  task: Task | tuple | None = None):
         self.exception = exception
-        self.exception_data = self._get_exception_data(exception)
+        if exception:
+            exception_data = self._get_exception_data(exception)
+        self.exception_data = exception_data
         self.task = task
 
     def _get_exception_data(self, exception: Exception):
