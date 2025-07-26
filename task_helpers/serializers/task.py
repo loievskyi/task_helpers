@@ -5,19 +5,17 @@ from .base import Serializer
 
 
 class TaskSerializer(Serializer[Task, bytes]):
-    """Main class that combines all serialization stages"""
-
     def __init__(
             self,
-            tuple_converter: TaskTupleConverter,
+            task_converter: TaskTupleConverter,
             bytes_converter: BytesConverter,
             compressor: Compressor
     ):
-        self._tuple_converter = tuple_converter
+        self._task_converter = task_converter
         self._bytes_converter = bytes_converter
         self._compressor = compressor
 
-    def serialize(self, task: Task) -> bytes:
+    def serialize(self, source: Task) -> bytes:
         """
         Serialize an object to compressed bytes
 
@@ -26,12 +24,11 @@ class TaskSerializer(Serializer[Task, bytes]):
         2. Converting tuple to bytes
         3. Compressing bytes
         """
-        tuple_data = self._tuple_converter.encode(task)
-        bytes_data = self._bytes_converter.encode(tuple_data)
-        compressed_data = self._compressor.compress(bytes_data)
-        return compressed_data
+        encoded = self._task_converter.encode(source)
+        encoded = self._bytes_converter.encode(encoded)
+        return self._compressor.compress(encoded)
 
-    def deserialize(self, data: bytes) -> Task:
+    def deserialize(self, serialized: bytes) -> Task:
         """
         Deserialize an object from compressed bytes
 
@@ -40,7 +37,6 @@ class TaskSerializer(Serializer[Task, bytes]):
         2. Converting bytes to tuple
         3. Restoring an object from a tuple
         """
-        decompressed_data = self._compressor.decompress(data)
-        tuple_data = self._bytes_converter.decode(decompressed_data)
-        task = self._tuple_converter.decode(tuple_data)
-        return task
+        partially_deserialized = self._compressor.decompress(serialized)
+        partially_deserialized = self._bytes_converter.decode(partially_deserialized)
+        return self._task_converter.decode(partially_deserialized)
