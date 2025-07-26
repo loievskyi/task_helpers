@@ -1,9 +1,9 @@
 from .base import Serializer
 from .task import TaskSerializer
-from .task_result import TaskResultSerializer
+from .custom_type import CustomTypeSerializer
 
 __all__ = [
     "Serializer",
     "TaskSerializer",
-    "TaskResultSerializer",
+    "CustomTypeSerializer",
 ]
