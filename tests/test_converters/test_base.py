@@ -1,38 +1,26 @@
 import pytest
 
-from task_helpers.converters.base import Converter
+from .conftest import converter
 
 
-class MockConverter(Converter[str, int]):
-    def encode(self, source: str) -> int:
-        return int(source)
-
-    def decode(self, target: int) -> str:
-        return str(target)
-
-
-def test_encode_valid():
-    converter = MockConverter()
+def test_encode_valid(converter):
     assert converter.encode("123") == 123
     assert converter.encode("-456") == -456
     assert converter.encode("0") == 0
 
 
-def test_encode_invalid():
-    converter = MockConverter()
+def test_encode_invalid(converter):
     with pytest.raises(ValueError):
         converter.encode("hello")
 
 
-def test_decode_valid():
-    converter = MockConverter()
+def test_decode_valid(converter):
     assert converter.decode(123) == "123"
     assert converter.decode(-456) == "-456"
     assert converter.decode(0) == "0"
 
 
-def test_round_trip_conversion():
-    converter = MockConverter()
+def test_round_trip_conversion(converter):
     source = "42"
     intermediate = converter.encode(source)
     result = converter.decode(intermediate)
