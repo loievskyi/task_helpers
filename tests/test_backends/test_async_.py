@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from tests.conftest import async_backend
+from .conftest import async_backend
 from task_helpers.backends.async_ import AsyncBackend
 from task_helpers.exceptions import DoesNotExistError
 

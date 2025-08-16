@@ -2,7 +2,7 @@ import time
 
 import pytest
 
-from tests.conftest import backend
+from .conftest import backend
 from task_helpers.backends.sync import Backend
 from task_helpers.exceptions import DoesNotExistError
 
