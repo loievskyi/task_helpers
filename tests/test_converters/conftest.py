@@ -5,6 +5,7 @@ from typing import TypeVar
 import pytest
 
 from task_helpers.converters.base import Converter
+from task_helpers.converters.custom_type import CustomTypeConverter
 from task_helpers.converters.perform_task_error import PerformTaskErrorTupleConverter
 from task_helpers.converters.stub import ConverterStub
 from task_helpers.converters.task import TaskTupleConverter
@@ -53,3 +54,13 @@ def random_text() -> str:
 @pytest.fixture
 def perform_task_error_converter(task_converter):
     return PerformTaskErrorTupleConverter(task_converter)
+
+
+@pytest.fixture
+def custom_type_converter(task_converter, converter_stub):
+    perform_task_error_converter = PerformTaskErrorTupleConverter(task_converter)
+    return CustomTypeConverter(
+        perform_task_error_converter=perform_task_error_converter,
+        task_converter=task_converter,
+        converter_stub=converter_stub
+    )
