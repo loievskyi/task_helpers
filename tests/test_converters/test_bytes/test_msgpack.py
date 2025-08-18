@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Any
 
+import msgpack
 import pytest
 
 from task_helpers.converters.bytes import MsgPackConverter
@@ -31,6 +32,15 @@ def sample_objects():
         True,
         3.14,
     ]
+
+
+def test_encode(converter):
+    assert converter.encode(42) == msgpack.dumps(42)
+
+
+def test_decode(converter):
+    encoded = msgpack.dumps(42)
+    assert converter.decode(encoded) == 42
 
 
 def test_should_correctly_encode_and_decode_simple_types(converter):

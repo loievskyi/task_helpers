@@ -34,6 +34,15 @@ def sample_objects():
     ]
 
 
+def test_encode(converter):
+    assert converter.encode(42) == pickle.dumps(42)
+
+
+def test_decode(converter):
+    encoded = pickle.dumps(42)
+    assert converter.decode(encoded) == 42
+
+
 def test_should_correctly_encode_and_decode_simple_types(converter):
     test_cases = [
         42,
