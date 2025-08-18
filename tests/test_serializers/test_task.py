@@ -1,21 +1,19 @@
-import pickle
-
 import pytest
 
 from task_helpers.tasks import Task
-from tests.conftest import mock_task_serializer
+from .conftest import mock_task_serializer
 
 
 def test_serialize(mock_task_serializer):
     task = Task(data="test_data")
     serialized_data = mock_task_serializer.serialize(task)
-    excepted_data = pickle.dumps((task.id.bytes, task.data))
+    excepted_data = mock_task_serializer._bytes_converter.encode((task.id.bytes, task.data))
     assert serialized_data == excepted_data
 
 
 def test_deserialize(mock_task_serializer):
     task = Task(data="test_data")
-    serialized_data = pickle.dumps((task.id.bytes, task.data))
+    serialized_data = mock_task_serializer._bytes_converter.encode((task.id.bytes, task.data))
     excepted = mock_task_serializer.deserialize(serialized_data)
     assert isinstance(excepted, Task)
     assert excepted.data == task.data
