@@ -2,7 +2,7 @@ import uuid
 
 from task_helpers.tasks import Task
 from task_helpers.exceptions import PerformTaskError
-from .conftest import random_text, perform_task_error_converter
+from .conftest import perform_task_error_converter
 
 
 

@@ -1,7 +1,7 @@
 import uuid
 
 from task_helpers.tasks import Task
-from .conftest import converter_stub, random_text
+from .conftest import converter_stub
 
 
 def test_encode_task(converter_stub, random_text: str):

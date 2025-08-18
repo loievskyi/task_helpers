@@ -1,10 +1,9 @@
-import random
-import string
 from typing import TypeVar
 
 import pytest
 
 from task_helpers.converters.base import Converter
+from task_helpers.converters.bytes import PickleConverter, MsgPackConverter
 from task_helpers.converters.custom_type import CustomTypeConverter
 from task_helpers.converters.perform_task_error import PerformTaskErrorTupleConverter
 from task_helpers.converters.stub import ConverterStub
@@ -22,7 +21,7 @@ class StrIntConverter(Converter[str, int]):
 
 
 @pytest.fixture
-def converter():
+def mock_converter():
     return StrIntConverter()
 
 
@@ -45,13 +44,6 @@ def converter_stub():
 
 
 @pytest.fixture
-def random_text() -> str:
-    length = random.randint(10, 100)
-    chars = string.ascii_letters
-    return "".join(random.choice(chars) for _ in range(length))
-
-
-@pytest.fixture
 def perform_task_error_converter(task_converter):
     return PerformTaskErrorTupleConverter(task_converter)
 
@@ -64,3 +56,12 @@ def custom_type_converter(task_converter, converter_stub):
         task_converter=task_converter,
         converter_stub=converter_stub
     )
+
+
+@pytest.fixture(params=[
+    pytest.param(PickleConverter, id="pickle"),
+    pytest.param(MsgPackConverter, id="msgpack"),
+])
+def bytes_converter(request):
+    converter_class = request.param
+    return converter_class()
