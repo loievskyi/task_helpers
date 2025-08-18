@@ -1,6 +1,7 @@
 from typing import Any
 
 from task_helpers.converters.stub import ConverterStub
+from task_helpers.tasks import Task
 from . import TaskTupleConverter
 from .base import Converter
 from .perform_task_error import PerformTaskErrorTupleConverter
@@ -17,7 +18,6 @@ class CustomTypeConverter(Converter[Any, tuple[bytes, Any]]):
         self._task_converter = task_converter
         self._converter_stub = converter_stub
 
-        from task_helpers.tasks import Task
         self._type_prefix_map = {
             "default": b"\x00",
             PerformTaskError: b"\x01",
@@ -40,3 +40,6 @@ class CustomTypeConverter(Converter[Any, tuple[bytes, Any]]):
         byte_prefix, encoded = target
         converter = self._prefix_encoders_map[byte_prefix]
         return converter.decode(encoded)
+
+    def set_task_converter(self, task_converter: TaskTupleConverter):
+        self._task_converter = task_converter
