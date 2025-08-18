@@ -6,6 +6,7 @@ import pytest
 
 from task_helpers.converters.base import Converter
 from task_helpers.converters.task import TaskTupleConverter
+from task_helpers.converters.stub import ConverterStub
 
 Type = TypeVar("Type")
 
@@ -23,7 +24,7 @@ def converter():
     return StrIntConverter()
 
 
-class ConverterStub(Converter[Type, Type]):
+class TestConverterStub(Converter[Type, Type]):
     def encode(self, source: Type) -> Type:
         return source
 
@@ -33,7 +34,12 @@ class ConverterStub(Converter[Type, Type]):
 
 @pytest.fixture
 def task_converter():
-    return TaskTupleConverter(ConverterStub())
+    return TaskTupleConverter(TestConverterStub())
+
+
+@pytest.fixture
+def converter_stub():
+    return ConverterStub()
 
 
 @pytest.fixture
