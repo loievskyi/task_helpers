@@ -5,8 +5,9 @@ from typing import TypeVar
 import pytest
 
 from task_helpers.converters.base import Converter
-from task_helpers.converters.task import TaskTupleConverter
+from task_helpers.converters.perform_task_error import PerformTaskErrorTupleConverter
 from task_helpers.converters.stub import ConverterStub
+from task_helpers.converters.task import TaskTupleConverter
 
 Type = TypeVar("Type")
 
@@ -47,3 +48,8 @@ def random_text() -> str:
     length = random.randint(10, 100)
     chars = string.ascii_letters
     return "".join(random.choice(chars) for _ in range(length))
+
+
+@pytest.fixture
+def perform_task_error_converter(task_converter):
+    return PerformTaskErrorTupleConverter(task_converter)
