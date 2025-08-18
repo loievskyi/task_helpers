@@ -1,4 +1,6 @@
 import pytest
+
+from tests.conftest import random_text
 from ..conftest import MockCompressor, MockLeveledCompressor
 
 

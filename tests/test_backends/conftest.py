@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Any, AsyncGenerator, Generator
 
 import pytest
 import pytest_asyncio
@@ -8,6 +9,25 @@ import redis.asyncio as aioredis
 from task_helpers.backends.async_ import AsyncBackend, AsyncRedisBackend
 from task_helpers.backends.sync import Backend
 from task_helpers.backends.sync import RedisBackend
+
+
+@pytest.fixture(scope="session")
+def mock_redis_client() -> Generator[redis.Redis, Any, None]:
+    """Returns a Redis connection"""
+    connection = redis.Redis(decode_responses=False, db=1)
+    connection.flushdb()
+    yield connection
+    connection.close()
+    connection.connection_pool.disconnect()
+
+
+@pytest_asyncio.fixture
+async def mock_aioredis_client() -> AsyncGenerator[aioredis.Redis, None]:
+    """Create an async Redis client instance for testing using a separate database"""
+    client = aioredis.Redis(db=1)
+    yield client
+    await client.close()
+    await client.connection_pool.disconnect()
 
 
 class SyncBackendType(Enum):
