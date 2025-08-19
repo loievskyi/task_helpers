@@ -2,9 +2,9 @@ import time
 
 import pytest
 
-from .conftest import backend
 from task_helpers.backends.sync import Backend
 from task_helpers.exceptions import DoesNotExistError
+from .conftest import backend
 
 
 class TestBackend:
@@ -37,6 +37,7 @@ class TestBackend:
 
     def test_pop_from_empty_queue_custom_error(self, backend: Backend):
         """Test popping from empty queue with custom error class"""
+
         class CustomError(DoesNotExistError):
             pass
 
@@ -124,6 +125,7 @@ class TestBackend:
 
     def test_move_between_queues_custom_error(self, backend: Backend):
         """Test moving item from empty queue with custom exception"""
+
         class CustomError(DoesNotExistError):
             pass
 

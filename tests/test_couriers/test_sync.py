@@ -8,25 +8,27 @@ import pytest
 from task_helpers.backends.sync import Backend
 from task_helpers.couriers import Courier, ClientSideCourier, WorkerSideCourier
 from task_helpers.exceptions import TaskResultDoesNotExist, TaskDoesNotExist
-from task_helpers.serializers import TaskSerializer, TaskResultSerializer
+from task_helpers.serializers import TaskSerializer, CustomTypeSerializer
 from task_helpers.tasks import Task
-from tests.conftest import mock_task_serializer, mock_task_result_serializer, backend, assert_blocks_longer_than
+from .conftest import (
+    mock_task_serializer, mock_custom_type_serializer,
+    backend, assert_blocks_longer_than)
 
 
 class TestCourier:
     @pytest.fixture
     def mock_courier(self, backend: Backend,
                      mock_task_serializer: TaskSerializer,
-                     mock_task_result_serializer: TaskResultSerializer):
+                     mock_custom_type_serializer: CustomTypeSerializer):
         return Courier(
             task_serializer=mock_task_serializer,
-            task_result_serializer=mock_task_result_serializer,
+            task_result_serializer=mock_custom_type_serializer,
             backend=backend,
             prefix_queue=f"test_prefix_{uuid.uuid4().hex[:8]}"
         )
 
     @pytest.fixture(params=[
-        pytest.param(("simple", "value"), id="simple_data"),
+        pytest.param("simple value", id="simple_data"),
         pytest.param({"url": "https://test.com"}, id="dict_data"),
         pytest.param(["list", "of", "strings"], id="list_data"),
     ])
@@ -60,12 +62,12 @@ class TestCourier:
         first_task_data = {
             "id": 123,
             "function": "test_function",
-            "args": ("arg1", "arg2"),
+            "args": ["arg1", "arg2"],
         }
         second_task_data = {
             "id": 456,
             "function": "test_function",
-            "args": ("arg3", "arg4"),
+            "args": ["arg3", "arg4"],
         }
 
         first_task_id = mock_courier.add_task_to_queue(queue_name, first_task_data)
@@ -490,7 +492,7 @@ class TestCouriersInit:
             self, courier_class: Type[ClientSideCourier | WorkerSideCourier | Courier],
             backend: Backend,
             mock_task_serializer: TaskSerializer,
-            mock_task_result_serializer: TaskResultSerializer):
+            mock_custom_type_serializer: CustomTypeSerializer):
         """Test that kwargs are properly set as attributes"""
         custom_prefix = f"custom_prefix_{uuid.uuid4().hex[:8]}"
         custom_timeout = 300
@@ -498,7 +500,7 @@ class TestCouriersInit:
 
         courier = courier_class(
             task_serializer=mock_task_serializer,
-            task_result_serializer=mock_task_result_serializer,
+            task_result_serializer=mock_custom_type_serializer,
             backend=backend,
             prefix_queue=custom_prefix,
             result_timeout_seconds=custom_timeout,
@@ -506,9 +508,9 @@ class TestCouriersInit:
         )
 
         # Verify that kwargs were set as attributes
-        assert courier.task_serializer == mock_task_serializer
-        assert courier.task_result_serializer == mock_task_result_serializer
-        assert courier.backend == backend
+        assert courier._task_serializer == mock_task_serializer
+        assert courier._task_result_serializer == mock_custom_type_serializer
+        assert courier._backend == backend
         assert courier.prefix_queue == custom_prefix
         assert courier.result_timeout_seconds == custom_timeout
         assert hasattr(courier, "custom_parameter")
@@ -518,18 +520,18 @@ class TestCouriersInit:
             self, courier_class: Type[ClientSideCourier | WorkerSideCourier | Courier],
             backend: Backend,
             mock_task_serializer: TaskSerializer,
-            mock_task_result_serializer: TaskResultSerializer):
+            mock_custom_type_serializer: CustomTypeSerializer):
         """Test courier initialization without additional kwargs"""
         courier = courier_class(
             task_serializer=mock_task_serializer,
-            task_result_serializer=mock_task_result_serializer,
+            task_result_serializer=mock_custom_type_serializer,
             backend=backend
         )
 
         # Verify basic attributes are set
-        assert courier.task_serializer == mock_task_serializer
-        assert courier.task_result_serializer == mock_task_result_serializer
-        assert courier.backend == backend
+        assert courier._task_serializer == mock_task_serializer
+        assert courier._task_result_serializer == mock_custom_type_serializer
+        assert courier._backend == backend
         # Default values should be preserved
         assert courier.prefix_queue == ""  # default value
         if isinstance(courier, WorkerSideCourier):

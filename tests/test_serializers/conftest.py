@@ -7,7 +7,8 @@ from tests.test_converters.conftest import task_converter, bytes_converter, cust
 from tests.test_compressors.conftest import mock_compressor
 
 
-converter_stub = converter_stub  # pytest not seen converter_stub fixture without this
+__all__ = ["str_bytes_serializer", "mock_task_serializer", "mock_custom_type_serializer", "converter_stub"]
+
 
 class MockStrSerializer(Serializer[str, bytes]):
     def serialize(self, data: str) -> bytes:
