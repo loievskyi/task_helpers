@@ -13,6 +13,7 @@ class Task:
     result: Any = None
 
 
+# reserve for the future
 @dataclass
 class ExtendedTask(Task):
     created_at: float = field(default_factory=time.time)
