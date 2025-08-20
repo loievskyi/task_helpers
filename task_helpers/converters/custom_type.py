@@ -36,6 +36,8 @@ class CustomTypeConverter(Converter[Any, tuple[bytes, Any]]):
         return converter.decode(encoded)
 
     def _add_converter(self, source_type: type, converter: Converter):
+        assert source_type not in self._type_prefix_map, "Type already exists"
+
         int_prefixes = [int.from_bytes(value) for value in self._prefix_encoders_map]
         new_prefix = max(int_prefixes) + 1
         new_prefix = new_prefix.to_bytes(self.prefix_size, "big")

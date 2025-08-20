@@ -1,4 +1,5 @@
 import uuid
+import pytest
 
 from task_helpers.converters import Converter
 from task_helpers.exceptions import PerformTaskError
@@ -189,6 +190,26 @@ class TestCustomTypeConverter:
         decoded = custom_type_converter.decode(encoded)
         assert isinstance(decoded, CustomType)
         assert decoded.value == "42"  # String because our converter converts to string
+
+
+    def test_add_converter_duplicate_type_raises_assertion_error(self, custom_type_converter):
+        """Test that adding a converter for an already registered type raises an AssertionError."""
+        # Try to add a converter for a Task type, which is already registered
+        class TaskConverter(Converter[Task, dict]):
+            def encode(self, source):
+                return {"id": str(source.id), "data": source.data}
+
+            def decode(self, target):
+                return Task(id=uuid.UUID(target["id"]), data=target["data"])
+
+        converter = TaskConverter()
+
+        # The assertion should be raised because Task is already registered
+        with pytest.raises(AssertionError) as ex:
+            custom_type_converter._add_converter(Task, converter)
+
+        assert "Type already exists" in str(ex.value)
+
 
     @property
     def _task_prefix(self):
