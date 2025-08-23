@@ -104,7 +104,8 @@ class TestAsyncCourier:
         task_id = uuid.uuid4()
         excepted_task_result = "test_task_result"
         queue_name = "test_queue"
-        await mock_courier.return_task_result("test_queue", task_id, excepted_task_result)
+        task = Task(id=task_id, data=None, result=excepted_task_result)
+        await mock_courier.return_task_result("test_queue", task)
         task_result = await mock_courier.get_task_result(queue_name, task_id, delete_data=True)
         assert task_result == excepted_task_result
         with pytest.raises(TaskResultDoesNotExist):
@@ -115,7 +116,8 @@ class TestAsyncCourier:
         task_id = uuid.uuid4()
         excepted_task_result = "test_task_result"
         queue_name = "test_queue"
-        await mock_courier.return_task_result("test_queue", task_id, excepted_task_result)
+        task = Task(id=task_id, data=None, result=excepted_task_result)
+        await mock_courier.return_task_result("test_queue", task)
         task_result = await mock_courier.get_task_result(queue_name, task_id, delete_data=False)
         assert task_result == excepted_task_result
 
@@ -139,7 +141,8 @@ class TestAsyncCourier:
         task_id = uuid.uuid4()
         excepted_task_result = "test_task_result"
         queue_name = "test_queue"
-        await mock_courier.return_task_result("test_queue", task_id, excepted_task_result)
+        task = Task(id=task_id, data=None, result=excepted_task_result)
+        await mock_courier.return_task_result("test_queue", task)
         task_result = await mock_courier.wait_for_task_result(queue_name, task_id, delete_data=True)
         assert task_result == excepted_task_result
 
@@ -152,7 +155,8 @@ class TestAsyncCourier:
         task_id = uuid.uuid4()
         excepted_task_result = "test_task_result"
         queue_name = "test_queue"
-        await mock_courier.return_task_result("test_queue", task_id, excepted_task_result)
+        task = Task(id=task_id, data=None, result=excepted_task_result)
+        await mock_courier.return_task_result("test_queue", task)
         task_result = await mock_courier.wait_for_task_result(queue_name, task_id, delete_data=False)
         assert task_result == excepted_task_result
 
@@ -164,7 +168,8 @@ class TestAsyncCourier:
     async def test_wait_for_task_result_with_delayed_result(self, mock_courier, sample_task_data):
         async def set_result(mock_courier_, queue_name_, task_id_, task_result_, sleep_seconds_):
             await asyncio.sleep(sleep_seconds_)
-            await mock_courier_.return_task_result(queue_name_, task_id_, task_result_)
+            task = Task(id=task_id_, data=None, result=task_result_)
+            await mock_courier_.return_task_result(queue_name_, task)
 
         task_id = uuid.uuid4()
         queue_name = "test_queue_name"
@@ -212,7 +217,8 @@ class TestAsyncCourier:
     async def test_check_for_done_if_result_exists(self, mock_courier):
         task_id = uuid.uuid4()
         task_result = "test_task_result"
-        await mock_courier.return_task_result("test_queue", task_id, task_result)
+        task = Task(id=task_id, data=None, result=task_result)
+        await mock_courier.return_task_result("test_queue", task)
         exists = await mock_courier.check_for_done("test_queue", task_id)
         assert isinstance(exists, bool)
         assert exists
@@ -397,11 +403,11 @@ class TestAsyncCourier:
         queue_name = "test_queue"
         task_id = uuid.uuid4()
         excepted_task_result = sample_task_data
+        task = Task(id=task_id, data=None, result=excepted_task_result)
 
         await mock_courier.return_task_result(
             queue_name=queue_name,
-            task_id=task_id,
-            task_result=excepted_task_result)
+            task=task)
 
         task_result = await mock_courier.get_task_result(queue_name, task_id)
         assert task_result == excepted_task_result
@@ -412,11 +418,11 @@ class TestAsyncCourier:
         queue_name = "test_queue"
         task_id = uuid.uuid4()
         excepted_task_result = sample_task_data
+        task = Task(id=task_id, data=None, result=excepted_task_result)
 
         await mock_courier.return_task_result(
             queue_name=queue_name,
-            task_id=task_id,
-            task_result=excepted_task_result)
+            task=task)
 
         task_result = await mock_courier.get_task_result(queue_name, task_id)
         assert task_result == excepted_task_result
@@ -427,11 +433,11 @@ class TestAsyncCourier:
         queue_name = "test_queue"
         task_id = uuid.uuid4()
         excepted_task_result = sample_task_data
+        task = Task(id=task_id, data=None, result=excepted_task_result)
 
         await mock_courier.return_task_result(
             queue_name=queue_name,
-            task_id=task_id,
-            task_result=excepted_task_result)
+            task=task)
 
         time.sleep(1.1)
         with pytest.raises(TaskResultDoesNotExist):
@@ -443,11 +449,11 @@ class TestAsyncCourier:
         queue_name = "test_queue"
         task_id = uuid.uuid4()
         excepted_task_result = sample_task_data
+        task = Task(id=task_id, data=None, result=excepted_task_result)
 
         await mock_courier.return_task_result(
             queue_name=queue_name,
-            task_id=task_id,
-            task_result=excepted_task_result)
+            task=task)
 
         time.sleep(1)
         task_result = await mock_courier.get_task_result(queue_name, task_id)

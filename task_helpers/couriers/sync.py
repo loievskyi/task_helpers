@@ -135,9 +135,9 @@ class WorkerSideCourier(QueueNameMixin):
             return [self.wait_for_task(queue_name=queue_name, timeout_seconds=timeout_seconds)]
         return tasks
 
-    def return_task_result(self, queue_name: str, task_id: uuid.UUID, task_result: Any) -> None:
-        queue_name = self._build_queue_name(queue_name, suffix=f"results:{str(task_id)}")
-        serialized = self._task_result_serializer.serialize(task_result)
+    def return_task_result(self, queue_name: str, task: Task) -> None:
+        queue_name = self._build_queue_name(queue_name, suffix=f"results:{str(task.id)}")
+        serialized = self._task_result_serializer.serialize(task.result)
         with self._backend.pipeline() as pipeline:
             pipeline.add_to_queue(queue_name, serialized)
             if self.result_timeout_seconds:

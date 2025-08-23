@@ -47,15 +47,24 @@ class TestCourier:
         assert task.id == task_id
         assert task.data == sample_task_data
 
-    def test_bulk_add_task_to_queue(self, mock_courier, sample_task_data):
+    def test_bulk_add_tasks_to_queue(self, mock_courier, sample_task_data):
         tasks_data = [sample_task_data] * 10
         tasks_ids = mock_courier.bulk_add_tasks_to_queue("test_queue", tasks_data)
         assert len(tasks_ids) == len(tasks_data)
 
-    def test_bulk_add_task_to_queue_if_no_data_provided(self, mock_courier):
+    def test_bulk_add_tasks_to_queue_if_no_data_provided(self, mock_courier):
         tasks_data = []
         tasks_ids = mock_courier.bulk_add_tasks_to_queue("test_queue", tasks_data)
         assert len(tasks_ids) == 0
+
+    def test_bulk_add_tasks_to_queue_edge_cases(self, mock_courier):
+        tasks_ids_empty = mock_courier.bulk_add_tasks_to_queue("test_queue", [])
+        assert len(tasks_ids_empty) == 0
+
+        single_task_data = {"key": "value"}
+        tasks_ids_single = mock_courier.bulk_add_tasks_to_queue("test_queue", [single_task_data])
+        assert len(tasks_ids_single) == 1
+        assert isinstance(tasks_ids_single[0], uuid.UUID)
 
     def test_courier_queue_works_as_fifo_with_single_operations(self, mock_courier):
         queue_name = "test_queue_name"
@@ -79,7 +88,7 @@ class TestCourier:
         assert second_task_id == second_task.id
         assert second_task_data == second_task.data
 
-    def test_bulk_add_task_to_queue_adds_as_fifo(self, mock_courier):
+    def test_bulk_add_tasks_to_queue_adds_as_fifo(self, mock_courier):
         queue_name = "test_queue_name"
         count_tasks = 10
 
@@ -96,7 +105,8 @@ class TestCourier:
         task_id = uuid.uuid4()
         excepted_task_result = "test_task_result"
         queue_name = "test_queue"
-        mock_courier.return_task_result("test_queue", task_id, excepted_task_result)
+        task = Task(id=task_id, data=None, result=excepted_task_result)
+        mock_courier.return_task_result("test_queue", task)
         task_result = mock_courier.get_task_result(queue_name, task_id, delete_data=True)
         assert task_result == excepted_task_result
         with pytest.raises(TaskResultDoesNotExist):
@@ -106,7 +116,8 @@ class TestCourier:
         task_id = uuid.uuid4()
         excepted_task_result = "test_task_result"
         queue_name = "test_queue"
-        mock_courier.return_task_result("test_queue", task_id, excepted_task_result)
+        task = Task(id=task_id, data=None, result=excepted_task_result)
+        mock_courier.return_task_result("test_queue", task)
         task_result = mock_courier.get_task_result(queue_name, task_id, delete_data=False)
         assert task_result == excepted_task_result
 
@@ -127,7 +138,8 @@ class TestCourier:
         task_id = uuid.uuid4()
         excepted_task_result = "test_task_result"
         queue_name = "test_queue"
-        mock_courier.return_task_result("test_queue", task_id, excepted_task_result)
+        task = Task(id=task_id, data=None, result=excepted_task_result)
+        mock_courier.return_task_result("test_queue", task)
         task_result = mock_courier.wait_for_task_result(queue_name, task_id, delete_data=True)
         assert task_result == excepted_task_result
 
@@ -139,7 +151,8 @@ class TestCourier:
         task_id = uuid.uuid4()
         excepted_task_result = "test_task_result"
         queue_name = "test_queue"
-        mock_courier.return_task_result("test_queue", task_id, excepted_task_result)
+        task = Task(id=task_id, data=None, result=excepted_task_result)
+        mock_courier.return_task_result("test_queue", task)
         task_result = mock_courier.wait_for_task_result(queue_name, task_id, delete_data=False)
         assert task_result == excepted_task_result
 
@@ -150,7 +163,8 @@ class TestCourier:
     def test_wait_for_task_result_with_delayed_result(self, mock_courier, sample_task_data):
         def set_result(mock_courier_: Courier, queue_name_, task_id_, task_result_, sleep_seconds_):
             time.sleep(sleep_seconds_)
-            mock_courier_.return_task_result(queue_name_, task_id_, task_result_)
+            task = Task(id=task_id_, data=None, result=task_result_)
+            mock_courier_.return_task_result(queue_name_, task)
 
         task_id = uuid.uuid4()
         queue_name = "test_queue_name"
@@ -195,7 +209,8 @@ class TestCourier:
     def test_check_for_done_if_result_exists(self, mock_courier):
         task_id = uuid.uuid4()
         task_result = "test_task_result"
-        mock_courier.return_task_result("test_queue", task_id, task_result)
+        task = Task(id=task_id, data=None, result=task_result)
+        mock_courier.return_task_result("test_queue", task)
         exists = mock_courier.check_for_done("test_queue", task_id)
         assert isinstance(exists, bool)
         assert exists
@@ -366,11 +381,11 @@ class TestCourier:
         queue_name = "test_queue"
         task_id = uuid.uuid4()
         excepted_task_result = sample_task_data
+        task = Task(id=task_id, data=None, result=excepted_task_result)
 
         mock_courier.return_task_result(
             queue_name=queue_name,
-            task_id=task_id,
-            task_result=excepted_task_result)
+            task=task)
 
         task_result = mock_courier.get_task_result(queue_name, task_id)
         assert task_result == excepted_task_result
@@ -380,11 +395,11 @@ class TestCourier:
         queue_name = "test_queue"
         task_id = uuid.uuid4()
         excepted_task_result = sample_task_data
+        task = Task(id=task_id, data=None, result=excepted_task_result)
 
         mock_courier.return_task_result(
             queue_name=queue_name,
-            task_id=task_id,
-            task_result=excepted_task_result)
+            task=task)
 
         task_result = mock_courier.get_task_result(queue_name, task_id)
         assert task_result == excepted_task_result
@@ -394,11 +409,11 @@ class TestCourier:
         queue_name = "test_queue"
         task_id = uuid.uuid4()
         excepted_task_result = sample_task_data
+        task = Task(id=task_id, data=None, result=excepted_task_result)
 
         mock_courier.return_task_result(
             queue_name=queue_name,
-            task_id=task_id,
-            task_result=excepted_task_result)
+            task=task)
 
         time.sleep(1.1)
         with pytest.raises(TaskResultDoesNotExist):
@@ -409,11 +424,11 @@ class TestCourier:
         queue_name = "test_queue"
         task_id = uuid.uuid4()
         excepted_task_result = sample_task_data
+        task = Task(id=task_id, data=None, result=excepted_task_result)
 
         mock_courier.return_task_result(
             queue_name=queue_name,
-            task_id=task_id,
-            task_result=excepted_task_result)
+            task=task)
 
         time.sleep(1)
         task_result = mock_courier.get_task_result(queue_name, task_id)
@@ -476,6 +491,15 @@ class TestCourier:
         for task in tasks:
             task_result = mock_courier.get_task_result(queue_name, task.id)
             assert task_result == task.result
+
+    def test_task_id_generation(self, mock_courier):
+        task_id_1 = mock_courier._generate_task_id()
+        task_id_2 = mock_courier._generate_task_id()
+
+        assert isinstance(task_id_1, uuid.UUID)
+        assert isinstance(task_id_2, uuid.UUID)
+        assert task_id_1 != task_id_2
+
 
 
 class TestCouriersInit:
