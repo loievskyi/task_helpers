@@ -11,7 +11,7 @@ services:
       - /bin/sh
       - -c
       - |
-        coverage run -m unittest
+        python3 -m coverage run -m pytest tests/  --ignore=tests/workers/
         coverage html
         coverage xml
     depends_on:
@@ -19,7 +19,7 @@ services:
     environment:
       - REDIS_HOST=redis_test
       - REDIS_PORT=6379
-      - REDIS_DB=0
+      - REDIS_DB=1
 
   redis_test:
     container_name: task_helpers_redis_test
