@@ -9,28 +9,29 @@ from .base import AsyncWriteOnlyBackend, AsyncBackend
 
 class AsyncRedisWriteOnlyBackend(AsyncWriteOnlyBackend):
     def __init__(self, redis_client: aioredis.Redis):
-        self.redis_client = redis_client
+        super().__init__(redis_client)
+        self._redis_client = redis_client
 
     async def set(self, key: str, value: bytes) -> None:
         """Set a key-value pair"""
-        await self.redis_client.set(key, value)
+        await self._redis_client.set(key, value)
 
     async def add_to_queue(self, queue_name: str, data: bytes) -> None:
         """Add single item to queue"""
-        await self.redis_client.rpush(queue_name, data)
+        await self._redis_client.rpush(queue_name, data)
 
     async def bulk_add_to_queue(self, queue_name: str, data: list[bytes]) -> None:
         """Add multiple items to queue"""
-        await self.redis_client.rpush(queue_name, *data)
+        await self._redis_client.rpush(queue_name, *data)
 
     async def expire(self, key: str, seconds: int) -> None:
         """Set a key expiration time"""
-        await self.redis_client.expire(key, seconds)
+        await self._redis_client.expire(key, seconds)
 
     @asynccontextmanager
     async def pipeline(self) -> AsyncGenerator["AsyncWriteOnlyBackend", "AsyncWriteOnlyBackend"]:
         """Create a Redis pipeline for atomic operations"""
-        pipeline = self.redis_client.pipeline()
+        pipeline = self._redis_client.pipeline()
         try:
             yield self.__class__(pipeline)
         finally:
@@ -43,28 +44,28 @@ class AsyncRedisBackend(AsyncRedisWriteOnlyBackend, AsyncBackend):
 
     async def get(self, key: str) -> bytes:
         """Get value by key"""
-        result: bytes | None = await self.redis_client.get(key)
+        result: bytes | None = await self._redis_client.get(key)
         if result is None:
             raise DoesNotExistError
         return result
 
     async def pop_from_queue(self, queue_name: str, error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
         """Pop single item from queue"""
-        result: bytes | None = await self.redis_client.lpop(queue_name)
+        result: bytes | None = await self._redis_client.lpop(queue_name)
         if result is None:
             raise error_class
         return result
 
     async def pop_from_queue_blocking(self, queue_name: str, timeout_seconds: int | None = None) -> bytes:
         """Pop single item from queue with blocking"""
-        result = await self.redis_client.blpop([queue_name], timeout=timeout_seconds)
+        result = await self._redis_client.blpop([queue_name], timeout=timeout_seconds)
         if result is None:
             raise TimeoutError
         return result[1]
 
     async def bulk_pop_from_queue(self, queue_name: str, max_count: int) -> list[bytes]:
         """Pop multiple items from queue"""
-        result = await self.redis_client.lpop(queue_name, count=max_count)
+        result = await self._redis_client.lpop(queue_name, count=max_count)
         if not result:
             return []
         return result
@@ -76,7 +77,7 @@ class AsyncRedisBackend(AsyncRedisWriteOnlyBackend, AsyncBackend):
         error_class: Type[DoesNotExistError] = DoesNotExistError
     ) -> bytes:
         """Move a single item between queues"""
-        result: bytes | None = await self.redis_client.lmove(source_queue_name, target_queue_name)
+        result: bytes | None = await self._redis_client.lmove(source_queue_name, target_queue_name)
         if result is None:
             raise error_class
         return result
@@ -89,7 +90,7 @@ class AsyncRedisBackend(AsyncRedisWriteOnlyBackend, AsyncBackend):
     ) -> bytes:
         """Move a single item between queues with blocking"""
         timeout_seconds = timeout_seconds or 0  # 0 means infinite wait
-        result: bytes | None = await self.redis_client.blmove(
+        result: bytes | None = await self._redis_client.blmove(
             source_queue_name,
             target_queue_name,
             timeout=timeout_seconds
@@ -124,4 +125,4 @@ class AsyncRedisBackend(AsyncRedisWriteOnlyBackend, AsyncBackend):
 
     async def exists(self, key: str) -> bool:
         """Check if the key exists"""
-        return bool(await self.redis_client.exists(key))
+        return bool(await self._redis_client.exists(key))

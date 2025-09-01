@@ -6,6 +6,10 @@ from task_helpers.exceptions import DoesNotExistError
 
 
 class WriteOnlyBackend(ABC):
+    def __init__(self, backend_connection, *args, **kwargs):
+        """Initialize backend connection."""
+        assert backend_connection is not None, "backend_connection is required"
+
     @abstractmethod
     def set(self, key: str, value: bytes) -> None:
         """Set value by key."""

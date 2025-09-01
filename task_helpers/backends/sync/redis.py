@@ -9,28 +9,29 @@ from .base import Backend, WriteOnlyBackend
 
 class RedisWriteOnlyBackend(WriteOnlyBackend):
     def __init__(self, redis_client: redis.Redis):
-        self.redis_client = redis_client
+        super().__init__(redis_client)
+        self._redis_client = redis_client
 
     def set(self, key: str, value: bytes) -> None:
         """Set a key-value pair"""
-        self.redis_client.set(key, value)
+        self._redis_client.set(key, value)
 
     def add_to_queue(self, queue_name: str, data: bytes) -> None:
         """Add single item to queue"""
-        self.redis_client.rpush(queue_name, data)
+        self._redis_client.rpush(queue_name, data)
 
     def bulk_add_to_queue(self, queue_name: str, data: list[bytes]) -> None:
         """Add multiple items to queue"""
-        self.redis_client.rpush(queue_name, *data)
+        self._redis_client.rpush(queue_name, *data)
 
     def expire(self, key: str, seconds: int) -> None:
         """Set a key expiration time"""
-        self.redis_client.expire(key, seconds)
+        self._redis_client.expire(key, seconds)
 
     @contextmanager
     def pipeline(self) -> Generator["WriteOnlyBackend", None, None]:
         """Create a Redis pipeline for atomic operations"""
-        pipeline = self.redis_client.pipeline()
+        pipeline = self._redis_client.pipeline()
         try:
             yield self.__class__(pipeline)
         finally:
@@ -43,28 +44,28 @@ class RedisBackend(RedisWriteOnlyBackend, Backend):
 
     def get(self, key: str) -> bytes:
         """Get value by key"""
-        result: bytes | None = self.redis_client.get(key)
+        result: bytes | None = self._redis_client.get(key)
         if result is None:
             raise DoesNotExistError
         return result
 
     def pop_from_queue(self, queue_name: str, error_class: Type[DoesNotExistError] = DoesNotExistError) -> bytes:
         """Pop single item from queue"""
-        result: bytes | None = self.redis_client.lpop(queue_name)  # returns bytes or None
+        result: bytes | None = self._redis_client.lpop(queue_name)  # returns bytes or None
         if result is None:
             raise error_class
         return result
 
     def pop_from_queue_blocking(self, queue_name: str, timeout_seconds: int | None = None) -> bytes:
         """Pop single item from queue with blocking"""
-        result = self.redis_client.blpop([queue_name], timeout=timeout_seconds)  # returns tuple (queue_name, value) or None
+        result = self._redis_client.blpop([queue_name], timeout=timeout_seconds)  # returns tuple (queue_name, value) or None
         if result is None:
             raise TimeoutError
         return result[1]
 
     def bulk_pop_from_queue(self, queue_name: str, max_count: int) -> list[bytes]:
         """Pop multiple items from queue"""
-        result = self.redis_client.lpop(queue_name, count=max_count)  # returns a list of results or None
+        result = self._redis_client.lpop(queue_name, count=max_count)  # returns a list of results or None
         if not result:
             return []
         return result
@@ -76,7 +77,7 @@ class RedisBackend(RedisWriteOnlyBackend, Backend):
             error_class: Type[DoesNotExistError] = DoesNotExistError
     ) -> bytes:
         """Move a single item between queues"""
-        result: bytes | None = self.redis_client.lmove(source_queue_name, target_queue_name)
+        result: bytes | None = self._redis_client.lmove(source_queue_name, target_queue_name)
         if result is None:
             raise error_class
         return result
@@ -89,7 +90,7 @@ class RedisBackend(RedisWriteOnlyBackend, Backend):
     ) -> bytes:
         """Move a single item between queues with blocking"""
         timeout_seconds = timeout_seconds or 0  # 0 means infinite wait
-        result: bytes | None = self.redis_client.blmove(
+        result: bytes | None = self._redis_client.blmove(
             source_queue_name,
             target_queue_name,
             timeout=timeout_seconds
@@ -124,4 +125,4 @@ class RedisBackend(RedisWriteOnlyBackend, Backend):
 
     def exists(self, key: str) -> bool:
         """Check if the key exists"""
-        return bool(self.redis_client.exists(key))
+        return bool(self._redis_client.exists(key))
