@@ -1,3 +1,4 @@
+import os
 from enum import Enum
 from typing import Any, AsyncGenerator, Generator
 
@@ -14,7 +15,22 @@ from task_helpers.backends.sync import RedisBackend
 @pytest.fixture(scope="session")
 def mock_redis_client() -> Generator[redis.Redis, Any, None]:
     """Returns a Redis connection"""
-    connection = redis.Redis(decode_responses=False, db=1)
+    redis_host = os.environ.get("REDIS_HOST")
+    redis_port = int(os.environ.get("REDIS_PORT"))
+    redis_db = int(os.environ.get("REDIS_DB"))
+    redis_password = os.environ.get("REDIS_PASSWORD", None)
+
+    assert redis_host is not None, "redis_host is None"
+    assert redis_port is not None, "redis_port is None"
+    assert redis_db is not None, "redis_db is None"
+
+    connection = redis.Redis(
+        host=redis_host,
+        port=redis_port,
+        db=redis_db,
+        password=redis_password,
+        decode_responses=False)
+
     connection.flushdb()
     yield connection
     connection.close()
@@ -24,10 +40,25 @@ def mock_redis_client() -> Generator[redis.Redis, Any, None]:
 @pytest_asyncio.fixture
 async def mock_aioredis_client() -> AsyncGenerator[aioredis.Redis, None]:
     """Create an async Redis client instance for testing using a separate database"""
-    client = aioredis.Redis(db=1)
-    yield client
-    await client.close()
-    await client.connection_pool.disconnect()
+    redis_host = os.environ.get("REDIS_HOST")
+    redis_port = int(os.environ.get("REDIS_PORT"))
+    redis_db = int(os.environ.get("REDIS_DB"))
+    redis_password = os.environ.get("REDIS_PASSWORD", None)
+
+    assert redis_host is not None, "redis_host is None"
+    assert redis_port is not None, "redis_port is None"
+    assert redis_db is not None, "redis_db is None"
+
+    connection = aioredis.Redis(
+        host=redis_host,
+        port=redis_port,
+        db=redis_db,
+        password=redis_password,
+        decode_responses=False)
+
+    yield connection
+    await connection.close()
+    await connection.connection_pool.disconnect()
 
 
 class SyncBackendType(Enum):
