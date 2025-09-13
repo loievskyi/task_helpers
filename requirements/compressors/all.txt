@@ -1,0 +1,4 @@
+cramjam==2.11.0
+lz4==4.4.4
+python-snappy==0.7.3
+zstandard==0.24.0
