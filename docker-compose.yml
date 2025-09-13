@@ -11,9 +11,9 @@ services:
       - /bin/sh
       - -c
       - |
-        python3 -m coverage run -m pytest tests/  --ignore=tests/workers/
-        coverage html
-        coverage xml
+        python3 -m coverage run --source=task_helpers -m pytest
+        python3 -m coverage html
+        python3 -m coverage xml
     depends_on:
       - "redis_test"
     environment:
