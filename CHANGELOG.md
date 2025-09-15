@@ -1,17 +1,19 @@
-# [2.0.0] - 2025-09-13
-## This is an alpha version with partially working functionality (only couriers are implemented)
+# Change Log
+
+## [2.0.0] - 2025-09-15
+> **Note:** This library is under development. This is an alpha version with partially working functionality (only couriers are implemented)
 - Workers have been removed, code needs to be rewritten.
 - Courier module has been reworked
 - Exceptions have been reworked
 - New modules have been added:
-  - backends (sync and async)
-  - compressors
-  - converters
-  - serializers
-  - tasks
-  - creators — for creating couriers, serializers (and workers, in the future)
+  - **backends** — synchronous and asynchronous backends
+  - **compressors** — data compression
+  - **converters** — format converters
+  - **serializers** — task data serializers
+  - **creators** — for creating couriers, serializers (and workers in the future)
+  - **tasks**
 
-# [1.4.1] - 2024-02-24
+## [1.4.1] - 2024-02-24
 - Asynchronous couriers have been added:
   - AbstractAsyncClientTaskCourier
   - AbstractAsyncWorkerTaskCourier
@@ -20,14 +22,14 @@
   - RedisAsyncWorkerTaskCourier
   - AbstractAsyncClientWorkerTaskCourier
 
-# [1.4.0] - 2023-12-21 - withdrawn
+## [1.4.0] - 2023-12-21 - withdrawn
 - Asynchronous couriers have been added and workers has been changed.
 
-# [1.3.2] - 2023-02-23
+## [1.3.2] - 2023-02-23
 - Changes on redis courier init method: added **kwargs (to assign them to an instance).
 
 
-# [1.3.1] - 2023-02-13
+## [1.3.1] - 2023-02-13
 - Added async workers and tests for them:
   - AbstractAsyncWorker
   - BaseAsyncWorker
@@ -35,12 +37,12 @@
 - Added async_init & async_destroy methods for async workers.
 - Added destroy method for sync workers.
 
-# [1.3.0] - 2023-02-11 - withdrawn
+## [1.3.0] - 2023-02-11 - withdrawn
 
-# [1.2.1] - 2023-02-11
+## [1.2.1] - 2023-02-11
 - Readme fixes.
 
-# [1.2.0] - 2023-02-11
+## [1.2.0] - 2023-02-11
 - Added bulk operations for TaskCourier's:
   - ClientTaskCourier - added bulk_add_tasks_to_queue method and tests for it.
   - WorkerTaskCourier - added bulk_return_task_results method & tests for it.
@@ -49,13 +51,13 @@
 - Performance improvements.
 - Changes on docs and readme.
 
-# [1.1.0] - 2023-01-23 - withdrawn
+## [1.1.0] - 2023-01-23 - withdrawn
 - New logic for _generate_task_id method.
 
-# [1.0.1] - 2023-01-05
+## [1.0.1] - 2023-01-05
 Readme fixes.
 
-# [1.0.0] - 2022-12-01
+## [1.0.0] - 2022-12-01
 Release.
 - Added Task couriers
   - ClientTaskCourier
