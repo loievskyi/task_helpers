@@ -13,4 +13,4 @@ pytest-asyncio==1.2.0
 python-snappy==0.7.3
 redis==6.4.0
 typing_extensions==4.15.0
-zstandard==0.24.0
+zstandard==0.25.0
