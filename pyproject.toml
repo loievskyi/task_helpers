@@ -1,6 +1,75 @@
 [build-system]
-requires = ["setuptools>=40.8.0"]
+requires = ["setuptools>=80.9.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
-target-version = ["py38"]
+target-version = ["py310"]
+
+[project]
+version = "2.0.0"
+name = "task_helpers"
+description = "A Python library for creating and managing asynchronous tasks with support for various backends."
+readme = "README.md"
+authors = [{ name = "Viacheslav Loievskyi", email = "loievskyi.slava@gmail.com" }]
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+keywords = ["task_helpers", "task helpers", "task-helpers"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: AsyncIO",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Build Tools",
+    "Typing :: Typed",
+    "Topic :: Software Development :: Object Brokering",
+    "Topic :: System :: Distributed Computing",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+]
+
+dependencies = []
+
+[project.optional-dependencies]
+minimal = []
+default = [
+    "aioredis~=2.0.1",
+    "async-timeout~=5.0.1",
+    "redis~=6.4.0",
+    "typing_extensions~=4.15.0",
+    "zstandard~=0.25.0",
+    "msgpack~=1.1.1"
+]
+redis = [
+    "aioredis~=2.0.1",
+    "async-timeout~=5.0.1",
+    "redis~=6.4.0",
+    "typing_extensions~=4.15.0",
+]
+lz4 = [
+    "lz4~=4.4.4",
+]
+snappy = [
+    "cramjam~=2.11.0",
+    "python-snappy~=0.7.3",
+]
+zstd = [
+    "zstandard~=0.25.0",
+]
+msgpack = [
+    "msgpack~=1.1.1"
+]
+
+all = [
+    "aioredis~=2.0.1",
+    "async-timeout~=5.0.1",
+    "redis~=6.4.0",
+    "typing_extensions~=4.15.0",
+    "lz4~=4.4.4",
+    "cramjam~=2.11.0",
+    "python-snappy~=0.7.3",
+    "zstandard~=0.25.0",
+    "msgpack~=1.1.1"
+]
+
+[project.urls]
+Homepage = "https://github.com/loievskyi/task_helpers"
+Changelog = "https://github.com/loievskyi/task_helpers/blob/master/CHANGELOG.md"

@@ -11,15 +11,15 @@ services:
       - /bin/sh
       - -c
       - |
-        coverage run -m unittest
-        coverage html
-        coverage xml
+        python3 -m coverage run --source=task_helpers -m pytest
+        python3 -m coverage html
+        python3 -m coverage xml
     depends_on:
       - "redis_test"
     environment:
       - REDIS_HOST=redis_test
       - REDIS_PORT=6379
-      - REDIS_DB=0
+      - REDIS_DB=1
 
   redis_test:
     container_name: task_helpers_redis_test
