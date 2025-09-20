@@ -10,8 +10,20 @@ A Python library for creating and managing asynchronous tasks with support for v
 > [Latest stable version: 1.4.1](https://pypi.org/project/task-helpers/1.4.1/)
 
 ## Installation
+
+Minimal:
 ```bash
 pip install task-helpers
+```
+
+With default requirements:
+```bash
+pip install task-helpers[default]
+```
+
+Or, with all possible requirements:
+```bash
+pip install task-helpers[all]
 ```
 
 ## Features

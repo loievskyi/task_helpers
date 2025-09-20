@@ -1,6 +1,6 @@
 # Change Log
 
-## [2.0.0] - 2025-09-15
+## [2.0.0] - 2025-09-20
 > **Note:** This library is under development. This is an alpha version with partially working functionality (only couriers are implemented)
 - Workers have been removed, code needs to be rewritten.
 - Courier module has been reworked
